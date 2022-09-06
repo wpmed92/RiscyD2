@@ -1,7 +1,6 @@
 class RAM:
     def __init__(self):
         self.memory = bytearray(1048576)
-        print(self.memory[0])
 
     #little-endian (LE): least significant byte (LSB) is at the smallest address
     def read8(self, address):
