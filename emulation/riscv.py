@@ -189,96 +189,109 @@ class RiscV:
     return self.registers[index] & MASK_XLEN
 
   def set_reg(self, index, val):
-    self.registers[index] = val
+    if (index > 0):
+      self.registers[index] = val & MASK_XLEN
 
   #Integer Computational Instructions
   #Either R-type (register + register), or I-type (register + immediate)
   def addi(self, opcode):
     print("ADDI called")
-    self.registers[opcode.rd()] = (sign_extend(opcode.imm12(), 11) + self.reg(opcode.rs1())) & MASK_XLEN
+    self.set_reg(opcode.rd(), (sign_extend(opcode.imm12(), 11) + self.reg(opcode.rs1())))
     return
   
   def slti(self, opcode):
-    if self.reg(opcode.rs1()) < sign_extend(opcode.imm12(), 11):
-      self.registers[opcode.rd()] = 1
+    rs1 = self.reg(opcode.rs1())
+    imm = sign_extend(opcode.imm12(), 11)
+    rs1_sign_bit = rs1 & (1 << 31)
+    imm_sign_bit = imm & (1 << 31)
+
+    if (rs1 < imm) ^ (rs1_sign_bit != imm_sign_bit):
+      self.set_reg(opcode.rd(), 1)
     else:
-      self.registers[opcode.rd()] = 0
+      self.set_reg(opcode.rd(), 0)
 
   def sltiu(self, opcode):
     if to_unsigned(self.reg(opcode.rs1())) < to_unsigned(sign_extend(opcode.imm12(), 11)):
-      self.registers[opcode.rd()] = 1
+      self.set_reg(opcode.rd(), 1)
     else:
-      self.registers[opcode.rd()] = 0
+      self.set_reg(opcode.rd(), 0)
 
   def andi(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) & sign_extend(opcode.imm12(), 11)) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) & sign_extend(opcode.imm12(), 11)))
 
   def ori(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) | sign_extend(opcode.imm12(), 11)) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) | sign_extend(opcode.imm12(), 11)))
 
   def xori(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) ^ sign_extend(opcode.imm12(), 11)) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) ^ sign_extend(opcode.imm12(), 11)))
 
   def slli(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) << (opcode.imm12() & 0b11111)) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) << (opcode.imm12() & 0b11111)))
 
   def srli(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) >> (opcode.imm12() & 0b11111)) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) >> (opcode.imm12() & 0b11111)))
 
   def srai(self, opcode):
-    sign_bit = self.reg(opcode.rs1()) & (1 << 31)
-    self.registers[opcode.rd()] = ((self.reg(opcode.rs1()) >> (opcode.imm12() & 0b11111)) | sign_bit) & MASK_XLEN
+    rs1 = self.reg(opcode.rs1())
+
+    if (self.reg(opcode.rs1()) & (1 << 31)):
+      rs1 = rs1 | (0xFFFFFFFF << 32)
+
+    self.set_reg(opcode.rd(), (rs1 >> (opcode.imm12() & 0b11111)))
 
   def add(self, opcode):
-      self.registers[opcode.rd()] = (self.reg(opcode.rs1()) + self.reg(opcode.rs2())) & MASK_XLEN
+      self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) + self.reg(opcode.rs2())))
 
   def sub(self, opcode):
-      self.registers[opcode.rd()] = (self.reg(opcode.rs1()) - self.reg(opcode.rs2())) & MASK_XLEN
+      self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) - self.reg(opcode.rs2())))
 
   def sll(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) << (self.reg(opcode.rs2()) & 0b11111)) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) << (self.reg(opcode.rs2()) & 0b11111)))
   
   def slt(self, opcode):
-    if self.reg(opcode.rs1()) < self.reg(opcode.rs2()):
-      self.registers[opcode.rd()] = 1
+    rs1 = self.reg(opcode.rs1())
+    rs2 = self.reg(opcode.rs2())
+    rs1_sign_bit = rs1 & (1 << 31)
+    rs2_sign_bit = rs2 & (1 << 31)
+
+    if (rs1 < rs2) ^ (rs1_sign_bit != rs2_sign_bit):
+      self.set_reg(opcode.rd(), 1)
     else:
-      self.registers[opcode.rd()] = 0
+      self.set_reg(opcode.rd(), 0)
   
   def sltu(self, opcode):
     if to_unsigned(self.reg(opcode.rs1())) < to_unsigned(self.reg(opcode.rs2())):
-      self.registers[opcode.rd()] = 1
+      self.set_reg(opcode.rd(), 1)
     else:
-      self.registers[opcode.rd()] = 0
+      self.set_reg(opcode.rd(), 0)
   
   def xor(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) ^ self.reg(opcode.rs2())) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) ^ self.reg(opcode.rs2())))
 
   def srl(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) >> (self.reg(opcode.rs2()) & 0b11111)) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) >> (self.reg(opcode.rs2()) & 0b11111)))
 
   def sra(self, opcode):
-    sign_bit = self.reg(opcode.rs1()) & (1 << 31)
-    self.registers[opcode.rd()] = ((self.reg(opcode.rs1()) >> (self.reg(opcode.rs2()) & 0b11111)) | sign_bit) & MASK_XLEN
+    rs1 = self.reg(opcode.rs1())
+
+    if (self.reg(opcode.rs1()) & (1 << 31)):
+      rs1 = rs1 | (0xFFFFFFFF << 32)
+
+    self.set_reg(opcode.rd(), (rs1 >> (self.reg(opcode.rs2()) & 0b11111)))
 
   def _or(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) | self.reg(opcode.rs2())) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) | self.reg(opcode.rs2())))
 
   def _and(self, opcode):
-    self.registers[opcode.rd()] = (self.reg(opcode.rs1()) & self.reg(opcode.rs2())) & MASK_XLEN
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) & self.reg(opcode.rs2())))
 
-  #Control transfer instructions
-  #J-type
-
-  #TODO: generate misaligned instruction fetch if not at four-byte boundary
-  #+/-1MiB range
   def jal(self, opcode):
-    self.registers[opcode.rd()] = self.pc + 4
+    self.set_reg(opcode.rd(), self.pc + 4)
     self.pc = (sign_extend(opcode.J(), 20) + self.pc) & MASK_XLEN
     self.pc -= 4
-    print("Executing JAL, jumping to: " + str(self.pc))
 
   def jalr(self, opcode):
-    self.registers[opcode.rd()] = self.pc + 4
+    self.set_reg(opcode.rd(), self.pc + 4)
     self.pc = (sign_extend(opcode.imm12(), 11) + self.reg(opcode.rs1())) & MASK_XLEN
     self.pc -= 4
 
@@ -324,23 +337,23 @@ class RiscV:
 
   def lb(self, opcode):
     address = self.calc_load_address(opcode)
-    self.registers[opcode.rd()] = sign_extend(self.ram.read8(address), 7)
+    self.set_reg(opcode.rd(), sign_extend(self.ram.read8(address), 7))
 
   def lh(self, opcode):
     address = self.calc_load_address(opcode)
-    self.registers[opcode.rd()] = sign_extend(self.ram.read16(address), 15)
+    self.set_reg(opcode.rd(), sign_extend(self.ram.read16(address), 15))
 
   def lw(self, opcode):
     address = self.calc_load_address(opcode)
-    self.registers[opcode.rd()] = self.ram.read32(address)
+    self.set_reg(opcode.rd(), self.ram.read32(address))
 
   def lbu(self, opcode):
     address = self.calc_load_address(opcode)
-    self.registers[opcode.rd()] = zero_extend(self.ram.read16(address), 7)
+    self.set_reg(opcode.rd(), zero_extend(self.ram.read16(address), 7))
 
   def lhu(self, opcode):
     address = self.calc_load_address(opcode)
-    self.registers[opcode.rd()] = zero_extend(self.ram.read16(address), 15)
+    self.set_reg(opcode.rd(), zero_extend(self.ram.read16(address), 15))
 
   #Store instructions
   def sb(self, opcode):
@@ -352,16 +365,11 @@ class RiscV:
   def sw(self, opcode):
     self.ram.write32(self.calc_store_address(opcode), self.reg(opcode.rs2()))
 
-  #U-type
   def lui(self, opcode):
-    self.registers[opcode.rd()] = 0
-    self.registers[opcode.rd()] = opcode.U()
+    self.set_reg(opcode.rd(), opcode.U())
 
-  #can be used in pair with jalr to jump to any address in the 32bit address space
   def auipc(self, opcode):
-    self.registers[opcode.rd()] = 0
-    self.registers[opcode.rd()] = self.pc + opcode.U()
-
+    self.set_reg(opcode.rd(), self.pc + opcode.U())
 
 class Opcode:
   op_integer = 0
@@ -417,4 +425,4 @@ class Opcode:
     return imm4_0 | (imm11_5 << 5)
 
   def U(self):
-    return self.op_integer >> 12
+    return self.op_integer & 0xFFFFF000
