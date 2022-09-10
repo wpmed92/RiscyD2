@@ -9,7 +9,7 @@ module imem(
     integer i;
 
     initial begin
-        $readmemh("rv32i.mem", mem);
+        $readmemh("code.mem", mem);
     end
 
     always @(state) begin
