@@ -98,7 +98,7 @@ module alu(
             end else if (is_lui) begin
                 _result = imm;
             end else if (is_load || is_store) begin
-                _result = rs1_val + imm;
+                _address = rs1_val + imm;
             end else begin
                 _result = 0;
                 _address = 0;
