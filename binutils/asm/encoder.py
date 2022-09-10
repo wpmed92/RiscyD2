@@ -72,9 +72,14 @@ class Encoder:
             "{:02x}".format((num >> 16) & 255) + " " +
             "{:02x}".format((num >> 24) & 255)
     )
-  def encode(self, asm_source_path):
-    bin_path = asm_source_path.split(".")[0] + ".o"
-    mem_path = asm_source_path.split(".")[0] + ".mem"
+
+  def encode(self, asm_source_path, bin_path):
+    if not bin_path:
+      bin_path = asm_source_path.rsplit(".", 1)[0] + ".o"
+      mem_path = asm_source_path.rsplit(".", 1)[0] + ".mem"
+    else:
+      mem_path = bin_path.rsplit(".", 1)[0] + ".mem"
+
     out_bin = open(bin_path, "wb")
     out_mem = open(mem_path, "w")
 
@@ -136,7 +141,6 @@ class Encoder:
     op = entry["op"]
     funct3 = entry["funct3"]
 
-    print(stmt.imm)
     imm4_1 = (stmt.imm >> 1) & 0b1111
     imm10_5 = (stmt.imm >> 5) & 0b111111
     imm11 = (stmt.imm >> 11) & 0b1
