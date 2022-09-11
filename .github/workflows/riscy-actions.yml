@@ -1,7 +1,7 @@
 name: RiscyD2 test actions
 on: [pull_request]
 jobs:
-  Explore-GitHub-Actions:
+  RiscyD2-Chip-Test-Actions:
     runs-on: ubuntu-latest
     steps:
     - name: Install icarus verilog
