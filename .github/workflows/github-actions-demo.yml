@@ -1,0 +1,16 @@
+name: GitHub Actions Demo
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install icarus verilog
+      run: sudo apt-get install -y iverilog
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+    - name: Run chip tests
+      run: |
+          cd test
+          python run_chip_test.py
