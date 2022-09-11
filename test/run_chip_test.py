@@ -11,7 +11,8 @@ expected_regs = [0x0, 0x15, 0x7, 0xfffffffc, 0x000000b4,
 try:
     subprocess.run(['./invoke_cpu.sh'], timeout=5, capture_output=True, text=True)
 except subprocess.TimeoutExpired as e:
-    lines = e.stdout.splitlines()[-NUM_REGISTERS-2:-2]
+    lines = e.stdout.splitlines()[-NUM_REGISTERS-4:-4]
+    
     for reg_line in lines:
         reg_pair = reg_line.decode("utf-8").split(":")
         reg_idx = int(reg_pair[0])
