@@ -15,7 +15,7 @@ module dmem(
     output [31:0] data_out
 );
     // 1Mb dmem
-    reg [7:0] mem [0:1048575];
+    reg [7:0] mem [0:64000];
     reg [31:0] data;
     
     integer i;
@@ -46,9 +46,6 @@ module dmem(
                     mem[address + 2] = data_in[23:16];
                     mem[address + 3] = data_in[31:24];
                 end
-
-                //for (i = 0; i < 22; i = i + 1)
-                //   $display("%d:%h", i, mem[i]);
             end
         end
     end
