@@ -5,12 +5,13 @@
 `include "dmem.v"
 `include "branch.v"
 
-module cpu(input clk, input reset, output [31:0] out1, output [31:0] out2);
-    reg[31:0] pc;
+module cpu(input CLK100MHZ, output [3:0] led);
+    reg[31:0] pc = -4;
     reg read_en;
     wire [31:0] instr;
 
     reg [2:0] state = 0;
+    reg blink = 0;
 
     // clk will increase state
     // 1 = fetch (imem)
@@ -235,20 +236,18 @@ module cpu(input clk, input reset, output [31:0] out1, output [31:0] out2);
         taken_branch
     );
 
-    always @ (posedge clk or posedge reset) begin
-        if (reset) begin
-            pc = 0;
-            state = 0;
-        end else begin
-            if (state == 3'd7) begin
-                pc = taken_branch ? address : (pc + 4);
-            end
+    always @ (posedge CLK100MHZ) begin
+        if (state == 3'd7) begin
+            pc = taken_branch ? address : (pc + 4);
         end
 
+        if (rd == 2) begin
+            blink = alu_result[0];
+        end
+        
         state = (state % 7) + 1;
     end
 
-    assign out1 = state;
-    assign out2 = alu_result;
+    assign led[0] = blink;
 
 endmodule

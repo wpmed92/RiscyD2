@@ -43,7 +43,7 @@ xori x23, x23, 1
 auipc x4, 4
 srli x24, x4, 7
 xori x24, x24, 0x80
-jal x25, 2
+jal x25, 4
 auipc x4, 0
 xor x25, x25, x4
 xori x25, x25, 1

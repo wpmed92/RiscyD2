@@ -3,7 +3,7 @@ module imem(
     input [31:0] pc, 
     output [31:0] instr_out
 );
-    reg [7:0] mem [0:1048575];
+    reg [7:0] mem [0:64000];
     reg [31:0] _instr_out;
 
     integer i;

@@ -128,11 +128,10 @@ class Encoder:
   #J-type
   def encode_jal(self, entry, stmt):
     op = entry["op"]
-    imm = stmt.imm << 1
-    imm10_1 = (imm >> 1) & 0b1111111111
-    imm11 = (imm >> 11) & 0b1
-    imm19_12 = (imm >> 12) & 0b11111111
-    imm20 = (imm >> 20) & 0b1
+    imm10_1 = (stmt.imm >> 1) & 0b1111111111
+    imm11 = (stmt.imm >> 11) & 0b1
+    imm19_12 = (stmt.imm >> 12) & 0b11111111
+    imm20 = (stmt.imm >> 20) & 0b1
 
     return op | (stmt.rd  << 7) | (imm19_12 << 12) | (imm11 << 20) | (imm10_1 << 21) | (imm20 << 31)
 
