@@ -29,7 +29,7 @@ Note:
 At this point MMIO is not implemented on the CPU, so how the led blinking works is that register 2 is associated with the led[0] port.
 So it works with "register mapping" until MMIO is implemented.
 
-![Riscy blinky](demo/riscyblinky.webm)
+![Riscy blinky](demo/riscyblinky.gif)
 
 ## License
 
