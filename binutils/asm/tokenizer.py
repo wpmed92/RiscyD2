@@ -67,8 +67,10 @@ class Tokenizer:
       "jal": True,
       "jalr": True,
       "lui": True,
-      "auipc": True
+      "auipc": True,
+      "li": True
     }
+    
     self.abi_id_to_index = {
       "zero": 0, 	#hardwired to 0, ignores writes	n/a
       "ra": 1, #return address for jumps	no
