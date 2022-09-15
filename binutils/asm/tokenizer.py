@@ -68,7 +68,13 @@ class Tokenizer:
       "jalr": True,
       "lui": True,
       "auipc": True,
-      "li": True
+      "li": True,
+      "mv": True,
+      "not": True,
+      "nop": True,
+      "j": True,
+      "ret": True,
+      "call": True
     }
     
     self.abi_id_to_index = {

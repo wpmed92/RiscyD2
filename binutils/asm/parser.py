@@ -19,11 +19,13 @@ class OpType(Enum):
   ARITHMETIC_I = 2,
   LOAD = 3,
   STORE = 4,
-  JAL = 5,
-  JALR = 6,
-  BRANCH = 7,
-  U_TYPE = 8,
-  LI = 9
+  JALR = 5,
+  BRANCH = 6,
+  U_TYPE = 7,
+  R_R = 8,
+  R_I = 9,
+  I = 10,
+  NO_OPERAND = 11
 
 class OpStatement:
   def __init__(self, name = None, rd = None, rs1 = None, rs2 = None, imm = None, _type = None, is_pseudo = False):
@@ -73,7 +75,11 @@ class Parser:
       "lw":  { "type": OpType.LOAD },
       "lhu": { "type": OpType.LOAD },
       "lbu": { "type": OpType.LOAD },
-      "li":  { "type": OpType.LI, "pseudo": True, "expand": self.expand_li },
+      "li":  { "type": OpType.R_I,        "expand": self.expand_li  },
+      "mv":  { "type": OpType.R_R,        "expand": self.expand_mv  },
+      "not": { "type": OpType.R_R,        "expand": self.expand_not },
+      "nop": { "type": OpType.NO_OPERAND, "expand": self.expand_nop },
+      "ret": { "type": OpType.NO_OPERAND, "expand": self.expand_ret },
       #Store S-type
       "sw":  { "type": OpType.STORE },
       "sh":  { "type": OpType.STORE },
@@ -86,13 +92,23 @@ class Parser:
       "bge": { "type": OpType.BRANCH },
       "bgeu":{ "type": OpType.BRANCH },
       #Jump J-type
-      "jal": { "type": OpType.JAL  },
+      "jal": { "type": OpType.R_I  },
+      "j": { "type": OpType.I, "expand": self.expand_j },
       "jalr":{ "type": OpType.JALR },
       #U-type
       "lui":   {"type": OpType.U_TYPE },
       "auipc": {"type": OpType.U_TYPE }
     }
     
+  #mv rd, rs
+  def expand_mv(self, stmt):
+    return OpStatement(name="addi", rd=stmt.rd, rs1=stmt.rs1, imm=0)
+
+  #not rd, rs
+  def expand_not(self, stmt):
+    return OpStatement(name="xori", rd=stmt.rd, rs1=stmt.rs1, imm=-1)
+
+  #li x1, 32bit_imm
   def expand_li(self, stmt):
     lo12 = stmt.imm & 0xFFF
     lo12_sext = sign_extend(lo12, 11)
@@ -101,6 +117,20 @@ class Parser:
     addi = OpStatement(name="addi", imm=lo12, rs1=stmt.rd, rd=stmt.rd)
 
     return [lui, addi]
+
+  def expand_nop(self, stmt):
+    return OpStatement(name="addi", rs1=0, rd=0, imm=0)
+
+  def expand_ret(self, stmt):
+    return OpStatement(name="jalr", rs1=1, rd=0, imm=0)
+
+  #j offset -> jal x0, offset
+  def expand_j(self, stmt):
+    return OpStatement(name="jal", rd=0, imm=stmt.imm)
+
+  #jal offset -> jal x1, offset
+  def expand_jal(self, stmt):
+    return OpStatement(name="jal", rd=1, imm=stmt.imm)
 
   def parse_op_statement(self):
     if self.cur_token().token_type != TokenType.OP_KEYWORD:
@@ -127,12 +157,16 @@ class Parser:
       stmt = self.parse_load_store_jalr(stmt, is_load_or_jalr=False)
     elif op_type == OpType.BRANCH:
       stmt = self.parse_branch(stmt)
-    elif op_type == OpType.JAL or op_type == OpType.LI:
+    elif op_type == OpType.R_I:
       stmt = self.parse_r_i(stmt)
     elif op_type == OpType.JALR:
       stmt = self.parse_load_store_jalr(stmt, is_load_or_jalr=True)
     elif op_type == OpType.U_TYPE:
       stmt = self.parse_u_type(stmt)
+    elif op_type == OpType.R_R:
+      stmt = self.parse_r_r(stmt)
+    elif op_type == OpType.NO_OPERAND:
+      stmt = self.parse_no_operand(stmt)
     else:
       raise Exception("Unknown statement: " + str(op_type))
     
@@ -318,6 +352,31 @@ class Parser:
 
     return stmt
 
+  def parse_r_r(self, stmt):
+    if self.peek_token().token_type != TokenType.REGISTER_INDEX:
+      raise Exception("Expected a register identifier")
+
+    self.advance_token()
+
+    stmt.rd = self.cur_token().val
+
+    if self.peek_token().token_type != TokenType.COMMA:
+      raise Exception("Expected a comma")
+
+    self.advance_token()
+
+    if self.peek_token().token_type != TokenType.REGISTER_INDEX:
+      raise Exception("Expected a register identifier")
+
+    self.advance_token()
+
+    stmt.rs1 = self.cur_token().val
+
+    return stmt
+
+  def parse_no_operand(self, stmt):
+    return stmt
+
   def peek_token(self):
     return self.token_stream[self.token_pos + 1]
 
@@ -334,7 +393,11 @@ class Parser:
 
       if ast != None:
         if ast.expand:
-          self.ast_list.extend(ast.expand(ast))
+          expanded = ast.expand(ast)
+          if isinstance(expanded, list):
+            self.ast_list.extend(expanded)
+          else:
+            self.ast_list.append(expanded)
         else:
           self.ast_list.append(ast)
 
