@@ -1,12 +1,16 @@
-`include "imem.v"
 `include "rf.v"
 `include "decode.v"
 `include "alu.v"
-`include "dmem.v"
+`include "mmu.v"
 `include "branch.v"
 
-module cpu(input clk, input reset, output [31:0] out1, output [31:0] out2);
-    reg[31:0] pc;
+module cpu(
+        input CLK100MHZ, 
+        output [3:0] led,
+        input uart_txd_in,
+        output uart_rxd_out
+    );
+    reg[31:0] pc = -4;
     reg read_en;
     wire [31:0] instr;
 
@@ -90,9 +94,6 @@ module cpu(input clk, input reset, output [31:0] out1, output [31:0] out2);
     // Jump
     wire is_jal;
     wire is_jalr;
-
-    // Instruction fetch
-    imem mem(state, pc, instr);
 
     // Decode
     decode dec(
@@ -203,7 +204,8 @@ module cpu(input clk, input reset, output [31:0] out1, output [31:0] out2);
         address
     );
 
-    dmem data(
+    mmu memorymanager(
+        CLK100MHZ,
         state,
         is_load,
         is_store,
@@ -215,9 +217,14 @@ module cpu(input clk, input reset, output [31:0] out1, output [31:0] out2);
         is_sb,
         is_sh,
         is_sw,
-        rs2_val,
+        pc,
         address,
-        load_result
+        rs2_val,
+        load_result,
+        instr,
+        led,
+        uart_txd_in,
+        uart_rxd_out
     );
 
     branch b(
@@ -235,20 +242,12 @@ module cpu(input clk, input reset, output [31:0] out1, output [31:0] out2);
         taken_branch
     );
 
-    always @ (posedge clk or posedge reset) begin
-        if (reset) begin
-            pc = 0;
-            state = 0;
-        end else begin
-            if (state == 3'd7) begin
-                pc = taken_branch ? address : (pc + 4);
-            end
+    always @ (posedge CLK100MHZ) begin
+        if (state == 3'd7) begin
+            pc = taken_branch ? address : (pc + 4);
         end
 
         state = (state % 7) + 1;
     end
-
-    assign out1 = state;
-    assign out2 = alu_result;
 
 endmodule

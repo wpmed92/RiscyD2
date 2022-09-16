@@ -25,7 +25,7 @@ module rf(
             registers[i] = 0;
     end
 
-    always @(state) begin
+    always @(*) begin
         if (state == 3'd3) begin
             _rs1_val = rs1_en ? registers[rs1] : 0;
             _rs2_val = rs2_en ? registers[rs2] : 0;
@@ -33,7 +33,7 @@ module rf(
             registers[rd] = is_load ? load_result : alu_result;
 
             for (i = 0; i < 32; i = i + 1)
-                $display("%d:%h", i, registers[i]);
+               $display("%d:%h", i, registers[i]);
         end
     end
 

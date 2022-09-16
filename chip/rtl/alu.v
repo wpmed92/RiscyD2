@@ -39,7 +39,7 @@ module alu(
     reg[63:0] srai;
     reg[63:0] sra;
 
-    always @(state) begin
+    always @(*) begin
         if (state == 3'd5) begin
             sext_rs1 = { {32{rs1_val[31]}}, rs1_val };
             srai = sext_rs1 >> imm[4:0];
