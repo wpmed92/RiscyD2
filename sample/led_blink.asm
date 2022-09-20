@@ -1,7 +1,9 @@
-addi x2, x0, 0
-lui x1, 0x6AE
-addi x1, x1, 0xFC0
-addi x1, x1, -1
-bne x1, x0, -4
-xori x2, x2, 1
-jal x0, -20
+li x1, 0
+li x2, 0x10000 ;base led pointer
+li x3, 0x6ACFC0
+addi x3, x3, -1
+bne x3, x0, -4
+xori x1, x1, 1
+sb x1, 0(x2) ;led[0]
+sb x1, 2(x2) ;led[2]
+jal x0, -24

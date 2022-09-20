@@ -1,19 +1,18 @@
+`timescale 1us/1us
 `include "cpu.v"
 
 module test;
-    reg reset = 0;
-    reg clk = 0;
+    reg clk = 0; 
 
-    wire [31:0] out1;
-    wire [31:0] out2;
+    wire tx;
+    reg rx = 1;
+    wire [3:0] leds;
 
     initial begin
-        # 10 reset = 1;
-        # 20 reset = 0;
         # 100000 $finish;
     end
 
     always #5 clk = !clk;
 
-    cpu core (clk, reset, out1, out2);
+    cpu core (clk, leds, rx, tx);
 endmodule

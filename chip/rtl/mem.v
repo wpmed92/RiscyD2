@@ -1,5 +1,6 @@
-module dmem(
+module mem(
     input [2:0] state,
+    input enabled,
     input load_enable,
     input store_enable,
     input is_lb,
@@ -10,29 +11,35 @@ module dmem(
     input is_sb,
     input is_sh,
     input is_sw,
+    input [31:0] pc, 
+    input [31:0] address,
     input [31:0] data_in,
-    input [31:0] address, 
-    output [31:0] data_out
+    output [31:0] data_out,
+    output [31:0] instr_out
 );
-    // 1Mb dmem
-    reg [7:0] mem [0:64000];
+    reg [7:0] mem [0:'hfff];
     reg [31:0] data;
-    
-    integer i;
+    reg [31:0] _instr_out;
 
-    always @(state) begin
-        if (state == 3'd6) begin
+    initial begin
+        $readmemh("code.mem", mem);
+    end
+
+    always @(*) begin
+        if (state == 3'd1) begin
+            _instr_out = { mem[pc + 3], mem[pc + 2], mem[pc + 1], mem[pc] };
+        end else if (state == 3'd6 && enabled) begin
             if (load_enable) begin
                 if (is_lb) begin
-                    data <= { {24{mem[address][7]}}, mem[address] };
+                    data = { {24{mem[address][7]}}, mem[address] };
                 end else if (is_lh) begin
-                    data <= { {16{mem[address][15]}}, mem[address + 1], mem[address] };
+                    data = { {16{mem[address][15]}}, mem[address + 1], mem[address] };
                 end else if (is_lbu) begin
-                    data <= { 24'b0, mem[address] };
+                    data = { 24'b0, mem[address] };
                 end else if (is_lhu) begin
-                    data <= { 16'b0, mem[address + 1], mem[address] };
+                    data = { 16'b0, mem[address + 1], mem[address] };
                 end else begin
-                    data <= { mem[address + 3], mem[address + 2], mem[address + 1], mem[address] };  
+                    data = { mem[address + 3], mem[address + 2], mem[address + 1], mem[address] };
                 end
             end else if (store_enable) begin
                 if (is_sb) begin
@@ -51,4 +58,5 @@ module dmem(
     end
 
     assign data_out = data;
+    assign instr_out = _instr_out;
 endmodule

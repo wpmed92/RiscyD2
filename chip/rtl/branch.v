@@ -15,7 +15,7 @@ module branch(
 
     reg _taken_branch = 0;
 
-    always @(state) begin
+    always @(*) begin
         if (state == 3'd4) begin
             if (is_beq) begin
                 _taken_branch = rs1_val == rs2_val;
