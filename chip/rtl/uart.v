@@ -17,16 +17,16 @@ reg sample_tick = 0;
 //9600 baud rate
 //sample 16 times 9600 -> 153600 -> 100MHz clock -> 651 clock tick produces 1 uart sample tick
 always @(posedge clk) begin
-    uart_tick = uart_tick + 1;
-
-    if (uart_tick == 651) begin
-        sample_tick = ~sample_tick;
-        uart_tick = 0;
+    if (uart_tick == 325) begin
+        sample_tick <= ~sample_tick;
+        uart_tick <= 0;
+    end else begin 
+        uart_tick <= uart_tick + 1;
     end
 end
 
 
-always @(sample_tick) begin
+always @(posedge sample_tick) begin
     if (uart_txd_in == 0 && state == 2'b00) begin
         if (counter == 7) begin
             _byte_read <= 0;
