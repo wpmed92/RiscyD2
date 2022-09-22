@@ -6,4 +6,4 @@ bne x3, x0, -4
 xori x1, x1, 1
 sb x1, 0(x2) ;led[0]
 sb x1, 2(x2) ;led[2]
-jal x0, -24
+jal x0, -28
