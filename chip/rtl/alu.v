@@ -1,4 +1,5 @@
 module alu(
+    input clk,
     input [2:0] state,
     input [31:0] rs1_val,
     input [31:0] rs2_val,
@@ -39,7 +40,7 @@ module alu(
     reg[63:0] srai;
     reg[63:0] sra;
 
-    always @(*) begin
+    always @(posedge clk) begin
         if (state == 3'd5) begin
             sext_rs1 = { {32{rs1_val[31]}}, rs1_val };
             srai = sext_rs1 >> imm[4:0];

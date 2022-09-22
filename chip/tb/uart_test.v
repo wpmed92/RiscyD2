@@ -22,7 +22,7 @@ module test_uart;
     end
 
     initial begin
-        # 4166670 
+        # 4218753 
         if (msg[0] == msg_back[0] && 
             msg[1] == msg_back[1] && 
             msg[2] == msg_back[2] && 

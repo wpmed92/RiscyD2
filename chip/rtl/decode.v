@@ -1,4 +1,5 @@
 module decode(
+    input clk,
     input [2:0] state,
     input [31:0] instr, 
     output [4:0] rs1,
@@ -117,7 +118,7 @@ module decode(
 
     reg [10:0] decode_bits;
     
-    always @(*) begin
+    always @(posedge clk) begin
         if (state == 3'd2) begin
             _is_i_type = (instr[6:2] == 5'b00000) || (instr[6:2] == 5'b00100) || (instr[6:2] == 5'b11001);
             _is_r_type = instr[6:2] == 5'b01100;

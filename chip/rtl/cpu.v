@@ -10,7 +10,7 @@ module cpu(
         input uart_txd_in,
         output uart_rxd_out
     );
-    reg[31:0] pc = -4;
+    reg[31:0] pc = 0;
     reg read_en;
     wire [31:0] instr;
 
@@ -97,6 +97,7 @@ module cpu(
 
     // Decode
     decode dec(
+        CLK100MHZ,
         state,
         instr,
         rs1,
@@ -154,6 +155,7 @@ module cpu(
     );
 
     rf register_file(
+        CLK100MHZ,
         state,
         rs1_en, 
         rs1, 
@@ -169,6 +171,7 @@ module cpu(
     );
 
     alu calc(
+        CLK100MHZ,
         state,
         rs1_val,
         rs2_val,
@@ -228,6 +231,7 @@ module cpu(
     );
 
     branch b(
+        CLK100MHZ,
         state,
         rs1_val,
         rs2_val,
@@ -244,10 +248,10 @@ module cpu(
 
     always @ (posedge CLK100MHZ) begin
         if (state == 3'd7) begin
-            pc = taken_branch ? address : (pc + 4);
+            pc <= taken_branch ? address : (pc + 4);
         end
 
-        state = (state % 7) + 1;
+        state <= (state % 7) + 1;
     end
 
 endmodule

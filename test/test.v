@@ -9,7 +9,7 @@ module test;
     wire [3:0] leds;
 
     initial begin
-        # 100000 $finish;
+       # 100000 $finish;
     end
 
     always #5 clk = !clk;
