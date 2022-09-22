@@ -1,4 +1,5 @@
 module rf(
+    input clk,
     input [2:0] state,
     input rs1_en, 
     input [4:0] rs1,
@@ -25,10 +26,10 @@ module rf(
             registers[i] = 0;
     end
 
-    always @(*) begin
+    always @(posedge clk) begin
         if (state == 3'd3) begin
-            _rs1_val = rs1_en ? registers[rs1] : 0;
-            _rs2_val = rs2_en ? registers[rs2] : 0;
+            _rs1_val <= rs1_en ? registers[rs1] : 0;
+            _rs2_val <= rs2_en ? registers[rs2] : 0;
         end else if (state == 3'd7 && rd_en && rd != 0) begin
             registers[rd] = is_load ? load_result : alu_result;
 

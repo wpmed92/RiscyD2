@@ -28,38 +28,38 @@ end
 
 always @(sample_tick) begin
     if (uart_txd_in == 0 && state == 2'b00) begin
-        counter = counter + 1;
-
-        if (counter == 8) begin
-            _byte_read = 0;
-            _byte = 0;
-            state = 2'b01;
-            counter = 0;
+        if (counter == 7) begin
+            _byte_read <= 0;
+            _byte <= 0;
+            state <= 2'b01;
+            counter <= 0;
+        end else begin
+            counter <= counter + 1;
         end
     end else if (state == 2'b01) begin
-        counter = counter + 1;
-
         if (bit_counter == 8) begin
-            bit_counter = 0;
-            state = 2'b11;
+            bit_counter <= 0;
+            state <= 2'b10;
+        end else if (counter == 15) begin
+            _byte <= _byte | (uart_txd_in << bit_counter);
+            counter <= 0;
+            bit_counter <= bit_counter + 1;
+        end else begin
+            counter <= counter + 1;
         end
-
-        if (counter == 16) begin
-            _byte = _byte | (uart_txd_in << bit_counter);
-            counter = 0;
-            bit_counter = bit_counter + 1;
-        end
-    end else if (state == 2'b11) begin
-        counter = counter + 1;
-
-        if (counter == 16 && uart_txd_in == 1) begin
-            _byte_read = 1;
-            counter = 0;
-            state = 2'b00; //idle
+    end else if (state == 2'b10) begin
+        if (counter == 15) begin
+            if (uart_txd_in == 1) begin
+                _byte_read <= 1;
+                counter <= 0;
+                state <= 2'b00; //idle
+            end
+        end else begin
+            counter <= counter + 1;
         end
     end else begin
-        _byte_read = 0;
-        _byte = 0;
+        _byte_read <= 0;
+        _byte <= 0;
     end
 end
 

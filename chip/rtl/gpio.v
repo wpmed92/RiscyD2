@@ -36,7 +36,7 @@ module gpio(
         byte_read //out
     );
 
-    always @(*) begin
+    always @(posedge clk) begin
         port_select = address % 8;
 
         if (state == 3'd6 && enabled) begin

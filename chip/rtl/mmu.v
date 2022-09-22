@@ -29,6 +29,7 @@ module mmu(
     wire [31:0] _gpio_out;
 
     mem bram(
+        clk,
         state,
         en_bram,
         load_enable,

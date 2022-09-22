@@ -9,7 +9,7 @@ module test_uart_with_cpu;
     reg rx = 1;
     wire [3:0] leds;
 
-    reg [7:0] exe[0:112];
+    reg [7:0] exe[0:51];
     reg start_transmission = 0;
 
     initial begin
@@ -27,7 +27,7 @@ module test_uart_with_cpu;
 
     //Transmission side
     always @(posedge tx_clk) begin
-        if (start_transmission == 1 && byte_counter < 112) begin
+        if (start_transmission == 1 && byte_counter < 52) begin
             i = i + 1;
             
             if (i == 0) begin //start bit
