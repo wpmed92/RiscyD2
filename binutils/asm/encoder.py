@@ -67,11 +67,11 @@ class Encoder:
     }
 
   def to_little_endian_4byte_hex(self, num):
-    return ("{:02x}".format(num & 255) + " " + 
-            "{:02x}".format((num >> 8) & 255) + " " + 
-            "{:02x}".format((num >> 16) & 255) + " " +
-            "{:02x}".format((num >> 24) & 255)
-    )
+    return ("{:02x}".format((num >> 24) & 255) + 
+            "{:02x}".format((num >> 16) & 255) +
+            "{:02x}".format((num >> 8) & 255) +
+            "{:02x}".format(num & 255)
+            )
 
   def encode(self, asm_source_path, bin_path):
     if not bin_path:
