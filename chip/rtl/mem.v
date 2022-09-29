@@ -18,7 +18,7 @@ module mem(
     output [31:0] data_out,
     output [31:0] instr_out
 );
-    reg [31:0] mem [0:'hfff];
+    reg [31:0] mem [0:'h3ff];
     reg [31:0] data;
     reg [31:0] _instr_out;
     reg [7:0] byte;
