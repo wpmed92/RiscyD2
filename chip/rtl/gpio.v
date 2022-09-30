@@ -22,7 +22,7 @@ module gpio(
     output uart_rxd_out
 );
 
-    reg [3:0] led;
+    reg [3:0] led = 4'b1111;
     reg [31:0] data;
     reg [2:0] port_select;
     wire [7:0] byte;
