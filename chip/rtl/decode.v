@@ -133,7 +133,7 @@ module decode(
 
             _rs1_valid = !_is_u_type && !_is_j_type;
             _rs2_valid = _is_s_type || _is_r_type || _is_b_type;
-            _rd_valid = !is_s_type && !is_b_type;
+            _rd_valid = !_is_s_type && !_is_b_type;
 
 
             // Decode immediate based on instruction type
