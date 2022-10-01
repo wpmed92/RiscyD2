@@ -5,8 +5,8 @@ module test;
     reg clk = 0; 
 
     wire tx;
-    reg rx = 1;
     wire [3:0] leds;
+    reg [3:0] sw = 4'b0000;
 
     initial begin
        # 100000 $finish;
@@ -14,5 +14,5 @@ module test;
 
     always #5 clk = !clk;
 
-    cpu core (clk, leds, rx, tx);
+    cpu core (clk, leds, tx, sw);
 endmodule

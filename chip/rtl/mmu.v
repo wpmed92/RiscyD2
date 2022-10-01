@@ -21,7 +21,7 @@ module mmu(
     output [31:0] instr_out,
     output [3:0] led,
     input uart_txd_in,
-    output uart_rxd_out
+    input [3:0] sw
 );
     wire en_bram = (address >= 0) && (address < 'h1000);
     wire en_gpio = address >= 'h1000;
@@ -68,7 +68,7 @@ module mmu(
         _gpio_out,
         led,
         uart_txd_in,
-        uart_rxd_out
+        sw
     );
 
     assign data_out = en_bram ? _bram_out : _gpio_out;
