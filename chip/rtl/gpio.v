@@ -24,7 +24,7 @@ module gpio(
 
     reg [3:0] led = 4'b0000;
     reg [31:0] data;
-    reg [2:0] port_select;
+    reg [3:0] port_select;
     wire [7:0] byte;
     wire  byte_read;
 
