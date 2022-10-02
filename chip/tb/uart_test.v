@@ -5,7 +5,6 @@ module test_uart;
     reg rx_clk = 0;
     reg tx_clk = 0;
 
-    wire tx; //ignores in this test
     reg rx = 1;
 
     reg [7:0] msg[0:3];
@@ -74,7 +73,6 @@ module test_uart;
     uart uart0(
         rx_clk,
         rx,
-        tx,
         byte,
         byte_read
     );

@@ -1,7 +1,6 @@
 module uart(
     input clk,
     input uart_txd_in,
-    output uart_rxd_out,
     output [7:0] byte,
     output byte_read
 );

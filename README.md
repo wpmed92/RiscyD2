@@ -12,17 +12,40 @@ The project is mainly educational, and is inspired by [From the Transistor to th
 
 ## Prerequisites
 
-- Python3
 - Icarus Verilog
+- Python3
+- PySerial
 
 ## Running on an FPGA
 
-RiscyD2 was tested on an Arty A7 35T board. To see it in action, compile `sample/led_blink.asm`:
-`python3 binutils/asm/asm.py -i sample/led_blink.asm -o code.o`
-This will emit a `code.o` flat binary and a `code.mem` memory file, which `$readmemh` will load into `mem`.
-Add the design sources to a Vivado project. Add the constraint file (`chip/fpga/arty_a7/arty_a7_35t.xdc`).
-For the synthesizer to pick up the memory file correctly, add it to the design sources, and Vivado will put it into a Memory folder.
-Deploy the design to your board. If everything went well all 4 leds will light up, and `led[0]` and `led[2]` will blink with a 1Hz frequency.
+RiscyD2 currently only supports Arty A7 35T.
+
+To set it up:
+- Compile the `bootrom`: 
+
+`python3 binutils/asm/asm.py -i os/bootrom.asm -o code.o`
+
+- Save the `code.mem` file you got from the previous step
+- Create a Vivado project
+- Add the content of `chip/rtl` as design sources
+- Add `code.mem` as a Memory file
+- Add constraints located under `chip/fpga/arty_a7/arty_a7_35t.xdc` as constraint file
+- Synthesize, implement and generate bitstream
+- Load the bitstream to board
+
+At this point the chip is deployed to the board, and `bootrom` is running. It continously checks the UART port for incoming exe files.
+
+To send an exe:
+
+- Compile an example program located under `sample`:
+
+`python3 binutils/asm/asm.py -i sample/switches.asm -o exe.o`
+
+- Send the exe through UART:
+
+`python3 tools/talk2d2.py -i path/to/exe`
+
+(NOTE: to get the ID of your board run `ls /dev/tty.*` in your terminal.)
 
 ## License
 
