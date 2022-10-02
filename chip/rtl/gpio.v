@@ -31,7 +31,6 @@ module gpio(
     uart uart0(
         clk,
         uart_txd_in,
-        uart_rxd_out,
         byte, //out
         byte_read //out
     );
