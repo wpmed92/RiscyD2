@@ -10,6 +10,8 @@ expected_regs = [0x0, 0x15, 0x7, 0xfffffffc, 0x000000b4,
 p = subprocess.run(['./invoke_cpu.sh'], capture_output=True, text=True)
 lines = p.stdout.splitlines()[-NUM_REGISTERS:]
 
+assert len(lines) > 0, f'Error while invoking CPU:\n{p.stderr}'
+
 for reg_line in lines:
     reg_pair = reg_line.split(":")
     reg_idx = int(reg_pair[0])

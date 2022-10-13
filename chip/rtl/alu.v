@@ -1,6 +1,4 @@
 module alu(
-    input clk,
-    input [2:0] state,
     input [31:0] rs1_val,
     input [31:0] rs2_val,
     input [31:0] imm,
@@ -40,70 +38,68 @@ module alu(
     reg[63:0] srai;
     reg[63:0] sra;
 
-    always @(posedge clk) begin
-        if (state == 3'd5) begin
-            sext_rs1 = { {32{rs1_val[31]}}, rs1_val };
-            srai = sext_rs1 >> imm[4:0];
-            sra = sext_rs1 >> rs2_val;
+    always @(*) begin
+        sext_rs1 = { {32{rs1_val[31]}}, rs1_val };
+        srai = sext_rs1 >> imm[4:0];
+        sra = sext_rs1 >> rs2_val;
 
-            if (is_addi) begin
-                _result = rs1_val + imm;
-            end else if (is_xori) begin
-                _result = rs1_val ^ imm;
-            end else if (is_ori) begin
-                _result = rs1_val | imm;
-            end else if (is_ori) begin
-                _result = rs1_val | imm;
-            end else if (is_andi) begin
-                _result = rs1_val & imm;
-            end else if (is_slli) begin
-                _result = rs1_val << imm[4:0];
-            end else if (is_srli) begin
-                _result = rs1_val >> imm[4:0];
-            end else if (is_srai) begin
-                _result = srai[31:0];
-            end else if (is_slti) begin
-                _result = { 31'b0, (rs1_val < imm) ^ (rs1_val[31] != imm[31]) };
-            end else if (is_sltiu) begin
-                _result = { 31'b0, rs1_val < imm };
-            end else if (is_add) begin
-                _result = rs1_val + rs2_val;
-            end else if (is_sub) begin
-                _result = rs1_val - rs2_val;
-            end else if (is_sll) begin
-                _result = rs1_val << rs2_val;
-            end else if (is_srl) begin
-                _result = rs1_val >> rs2_val;
-            end else if (is_sra) begin
-                _result = sra[31:0];
-            end else if (is_or) begin
-                _result = rs1_val | rs2_val;
-            end else if (is_xor) begin
-                _result = rs1_val ^ rs2_val;
-            end else if (is_and) begin
-                _result = rs1_val & rs2_val;
-            end else if (is_slt) begin
-                _result = { 31'b0, (rs1_val < rs2_val) ^ (rs1_val[31] != rs2_val[31]) };
-            end else if (is_sltu) begin
-                _result = { 31'b0, rs1_val < rs2_val };
-            end else if (is_auipc) begin
-                _result = pc + imm;
-            end else if (is_branch) begin
-                _address = pc + imm;
-            end else if (is_jal) begin
-                _address = pc + imm;
-                _result = pc + 4;
-            end else if (is_jalr) begin
-                _address = rs1_val + imm;
-                _result = pc + 4;
-            end else if (is_lui) begin
-                _result = imm;
-            end else if (is_load || is_store) begin
-                _address = rs1_val + imm;
-            end else begin
-                _result = 0;
-                _address = 0;
-            end
+        if (is_addi) begin
+            _result = rs1_val + imm;
+        end else if (is_xori) begin
+            _result = rs1_val ^ imm;
+        end else if (is_ori) begin
+            _result = rs1_val | imm;
+        end else if (is_ori) begin
+            _result = rs1_val | imm;
+        end else if (is_andi) begin
+            _result = rs1_val & imm;
+        end else if (is_slli) begin
+            _result = rs1_val << imm[4:0];
+        end else if (is_srli) begin
+            _result = rs1_val >> imm[4:0];
+        end else if (is_srai) begin
+            _result = srai[31:0];
+        end else if (is_slti) begin
+            _result = { 31'b0, (rs1_val < imm) ^ (rs1_val[31] != imm[31]) };
+        end else if (is_sltiu) begin
+            _result = { 31'b0, rs1_val < imm };
+        end else if (is_add) begin
+            _result = rs1_val + rs2_val;
+        end else if (is_sub) begin
+            _result = rs1_val - rs2_val;
+        end else if (is_sll) begin
+            _result = rs1_val << rs2_val;
+        end else if (is_srl) begin
+            _result = rs1_val >> rs2_val;
+        end else if (is_sra) begin
+            _result = sra[31:0];
+        end else if (is_or) begin
+            _result = rs1_val | rs2_val;
+        end else if (is_xor) begin
+            _result = rs1_val ^ rs2_val;
+        end else if (is_and) begin
+            _result = rs1_val & rs2_val;
+        end else if (is_slt) begin
+            _result = { 31'b0, (rs1_val < rs2_val) ^ (rs1_val[31] != rs2_val[31]) };
+        end else if (is_sltu) begin
+            _result = { 31'b0, rs1_val < rs2_val };
+        end else if (is_auipc) begin
+            _result = pc + imm;
+        end else if (is_branch) begin
+            _address = pc + imm;
+        end else if (is_jal) begin
+            _address = pc + imm;
+            _result = pc + 4;
+        end else if (is_jalr) begin
+            _address = rs1_val + imm;
+            _result = pc + 4;
+        end else if (is_lui) begin
+            _result = imm;
+        end else if (is_load || is_store) begin
+            _address = rs1_val + imm;
+        end else begin
+            _result = 0;
+            _address = 0;
         end
     end
 

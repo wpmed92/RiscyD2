@@ -27,10 +27,10 @@ module rf(
     end
 
     always @(posedge clk) begin
-        if (state == 3'd3) begin
+        if (state == 3'd2) begin
             _rs1_val <= rs1_en ? registers[rs1] : 0;
             _rs2_val <= rs2_en ? registers[rs2] : 0;
-        end else if (state == 3'd7 && rd_en && rd != 0) begin
+        end else if (state == 3'd4 && rd_en && rd != 0) begin
             registers[rd] = is_load ? load_result : alu_result;
 
             for (i = 0; i < 32; i = i + 1)

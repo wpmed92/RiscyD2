@@ -1,6 +1,4 @@
 module decode(
-    input clk,
-    input [2:0] state,
     input [31:0] instr, 
     output [4:0] rs1,
     output rs1_valid,
@@ -118,96 +116,94 @@ module decode(
 
     reg [10:0] decode_bits;
     
-    always @(posedge clk) begin
-        if (state == 3'd2) begin
-            _is_i_type = (instr[6:2] == 5'b00000) || (instr[6:2] == 5'b00100) || (instr[6:2] == 5'b11001);
-            _is_r_type = instr[6:2] == 5'b01100;
-            _is_b_type = instr[6:2] == 5'b11000;
-            _is_s_type = instr[6:2] == 5'b01000;
-            _is_j_type = instr[6:2] == 5'b11011;
-            _is_u_type = (instr[6:2] == 5'b01101) || (instr[6:2] == 5'b00101);
+    always @(*) begin
+        _is_i_type = (instr[6:2] == 5'b00000) || (instr[6:2] == 5'b00100) || (instr[6:2] == 5'b11001);
+        _is_r_type = instr[6:2] == 5'b01100;
+        _is_b_type = instr[6:2] == 5'b11000;
+        _is_s_type = instr[6:2] == 5'b01000;
+        _is_j_type = instr[6:2] == 5'b11011;
+        _is_u_type = (instr[6:2] == 5'b01101) || (instr[6:2] == 5'b00101);
 
-            _rs1 = instr[19:15];
-            _rs2 = instr[24:20];
-            _rd = instr[11:7];
+        _rs1 = instr[19:15];
+        _rs2 = instr[24:20];
+        _rd = instr[11:7];
 
-            _rs1_valid = !_is_u_type && !_is_j_type;
-            _rs2_valid = _is_s_type || _is_r_type || _is_b_type;
-            _rd_valid = !_is_s_type && !_is_b_type;
+        _rs1_valid = !_is_u_type && !_is_j_type;
+        _rs2_valid = _is_s_type || _is_r_type || _is_b_type;
+        _rd_valid = !_is_s_type && !_is_b_type;
 
 
-            // Decode immediate based on instruction type
-            if (_is_i_type) begin
-                _imm = { {21{instr[31]}}, instr[30:20] };
-            end
-            else if (_is_b_type) begin
-                _imm = { {20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0 };
-            end
-            else if (_is_s_type) begin
-                _imm = { {21{instr[31]}}, instr[30:25], instr[11:7] };
-            end
-            else if (_is_j_type) begin
-                _imm = { {12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0  };
-            end
-            else if (_is_u_type) begin
-                _imm = { instr[31:12], 12'b0 };
-            end
-            else begin
-                _imm = 0;
-            end
-
-            decode_bits = { instr[30], instr[14:12], instr[6:0] };
-
-            // Load/store
-            _is_lb = decode_bits == 11'b0_000_0000011 || decode_bits == 11'b1_000_0000011;
-            _is_lh = decode_bits == 11'b0_001_0000011 || decode_bits == 11'b1_001_0000011;
-            _is_lw = decode_bits == 11'b0_010_0000011 || decode_bits == 11'b1_010_0000011;
-            _is_lbu = decode_bits == 11'b0_100_0000011 || decode_bits == 11'b1_100_0000011;
-            _is_lhu = decode_bits == 11'b0_101_0000011 || decode_bits == 11'b1_101_0000011;
-            _is_sb = decode_bits == 11'b0_000_0100011 || decode_bits == 11'b1_000_0100011;
-            _is_sh = decode_bits == 11'b0_001_0100011 || decode_bits == 11'b1_001_0100011;
-            _is_sw = decode_bits == 11'b0_010_0100011 || decode_bits == 11'b1_010_0100011;
-            _is_load = instr[6:2] == 5'b00000;
-            _is_store = instr[6:2] == 5'b01000;
-
-            // I-type arithmetic
-            _is_addi =  decode_bits == 11'b0_000_0010011  || decode_bits == 11'b1_000_0010011;
-            _is_slti =  decode_bits == 11'b0_010_0010011  || decode_bits == 11'b1_010_0010011;
-            _is_sltiu = decode_bits == 11'b0_011_0010011  || decode_bits == 11'b1_011_0010011;
-            _is_xori =  decode_bits == 11'b0_100_0010011  || decode_bits == 11'b1_100_0010011;
-            _is_ori = decode_bits == 11'b0_110_0010011  || decode_bits == 11'b1_110_0010011;
-            _is_andi =  decode_bits == 11'b0_111_0010011  || decode_bits == 11'b1_111_0010011;
-            _is_slli =  decode_bits == 11'b0_001_0010011;
-            _is_srli =  decode_bits == 11'b0_101_0010011;
-            _is_srai =  decode_bits == 11'b1_101_0010011;
-
-            // R-type arithmetic
-            _is_add  = decode_bits == 11'b0_000_0110011;
-            _is_sub  = decode_bits == 11'b1_000_0110011;
-            _is_sll  = decode_bits == 11'b0_001_0110011;
-            _is_slt  = decode_bits == 11'b0_010_0110011;
-            _is_sltu = decode_bits == 11'b0_011_0110011;
-            _is_xor  = decode_bits == 11'b0_100_0110011;
-            _is_srl  = decode_bits == 11'b0_101_0110011;
-            _is_sra  = decode_bits == 11'b1_101_0110011;
-            _is_or   = decode_bits == 11'b0_110_0110011;
-            _is_and  = decode_bits == 11'b0_111_0110011;
-
-            // Branch
-            _is_beq = decode_bits == 11'b0_000_1100011  || decode_bits == 11'b1_000_1100011;
-            _is_bne = decode_bits == 11'b0_001_1100011  || decode_bits == 11'b1_001_1100011;
-            _is_bge = decode_bits == 11'b0_101_1100011  || decode_bits == 11'b1_101_1100011;
-            _is_bgeu = decode_bits == 11'b0_111_1100011 || decode_bits == 11'b1_111_1100011;
-            _is_blt = decode_bits == 11'b0_100_1100011  || decode_bits == 11'b1_100_1100011;
-            _is_bltu = decode_bits == 11'b0_110_1100011 || decode_bits == 11'b1_110_1100011;
-
-            // Jump
-            _is_jal =  instr[6:2] == 5'b11011;
-            _is_jalr = instr[6:2] == 5'b11001;
-
-            _is_auipc = instr[6:2] == 5'b00101;
-            _is_lui   = instr[6:2] == 5'b01101;
+        // Decode immediate based on instruction type
+        if (_is_i_type) begin
+            _imm = { {21{instr[31]}}, instr[30:20] };
         end
+        else if (_is_b_type) begin
+            _imm = { {20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0 };
+        end
+        else if (_is_s_type) begin
+            _imm = { {21{instr[31]}}, instr[30:25], instr[11:7] };
+        end
+        else if (_is_j_type) begin
+            _imm = { {12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0  };
+        end
+        else if (_is_u_type) begin
+            _imm = { instr[31:12], 12'b0 };
+        end
+        else begin
+            _imm = 0;
+        end
+
+        decode_bits = { instr[30], instr[14:12], instr[6:0] };
+
+        // Load/store
+        _is_lb = decode_bits == 11'b0_000_0000011 || decode_bits == 11'b1_000_0000011;
+        _is_lh = decode_bits == 11'b0_001_0000011 || decode_bits == 11'b1_001_0000011;
+        _is_lw = decode_bits == 11'b0_010_0000011 || decode_bits == 11'b1_010_0000011;
+        _is_lbu = decode_bits == 11'b0_100_0000011 || decode_bits == 11'b1_100_0000011;
+        _is_lhu = decode_bits == 11'b0_101_0000011 || decode_bits == 11'b1_101_0000011;
+        _is_sb = decode_bits == 11'b0_000_0100011 || decode_bits == 11'b1_000_0100011;
+        _is_sh = decode_bits == 11'b0_001_0100011 || decode_bits == 11'b1_001_0100011;
+        _is_sw = decode_bits == 11'b0_010_0100011 || decode_bits == 11'b1_010_0100011;
+        _is_load = instr[6:2] == 5'b00000;
+        _is_store = instr[6:2] == 5'b01000;
+
+        // I-type arithmetic
+        _is_addi =  decode_bits == 11'b0_000_0010011  || decode_bits == 11'b1_000_0010011;
+        _is_slti =  decode_bits == 11'b0_010_0010011  || decode_bits == 11'b1_010_0010011;
+        _is_sltiu = decode_bits == 11'b0_011_0010011  || decode_bits == 11'b1_011_0010011;
+        _is_xori =  decode_bits == 11'b0_100_0010011  || decode_bits == 11'b1_100_0010011;
+        _is_ori = decode_bits == 11'b0_110_0010011  || decode_bits == 11'b1_110_0010011;
+        _is_andi =  decode_bits == 11'b0_111_0010011  || decode_bits == 11'b1_111_0010011;
+        _is_slli =  decode_bits == 11'b0_001_0010011;
+        _is_srli =  decode_bits == 11'b0_101_0010011;
+        _is_srai =  decode_bits == 11'b1_101_0010011;
+
+        // R-type arithmetic
+        _is_add  = decode_bits == 11'b0_000_0110011;
+        _is_sub  = decode_bits == 11'b1_000_0110011;
+        _is_sll  = decode_bits == 11'b0_001_0110011;
+        _is_slt  = decode_bits == 11'b0_010_0110011;
+        _is_sltu = decode_bits == 11'b0_011_0110011;
+        _is_xor  = decode_bits == 11'b0_100_0110011;
+        _is_srl  = decode_bits == 11'b0_101_0110011;
+        _is_sra  = decode_bits == 11'b1_101_0110011;
+        _is_or   = decode_bits == 11'b0_110_0110011;
+        _is_and  = decode_bits == 11'b0_111_0110011;
+
+        // Branch
+        _is_beq = decode_bits == 11'b0_000_1100011  || decode_bits == 11'b1_000_1100011;
+        _is_bne = decode_bits == 11'b0_001_1100011  || decode_bits == 11'b1_001_1100011;
+        _is_bge = decode_bits == 11'b0_101_1100011  || decode_bits == 11'b1_101_1100011;
+        _is_bgeu = decode_bits == 11'b0_111_1100011 || decode_bits == 11'b1_111_1100011;
+        _is_blt = decode_bits == 11'b0_100_1100011  || decode_bits == 11'b1_100_1100011;
+        _is_bltu = decode_bits == 11'b0_110_1100011 || decode_bits == 11'b1_110_1100011;
+
+        // Jump
+        _is_jal =  instr[6:2] == 5'b11011;
+        _is_jalr = instr[6:2] == 5'b11001;
+
+        _is_auipc = instr[6:2] == 5'b00101;
+        _is_lui   = instr[6:2] == 5'b01101;
     end
 
 

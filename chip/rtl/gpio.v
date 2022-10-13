@@ -38,7 +38,7 @@ module gpio(
     always @(posedge clk) begin
         port_select = address % 16;
 
-        if (state == 3'd6 && enabled) begin
+        if (state == 3'd3 && enabled) begin
             if (store_enable) begin
                 case (port_select)
                     4'b0000   : led[0] = data_in > 0;
