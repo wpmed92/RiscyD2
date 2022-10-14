@@ -87,7 +87,7 @@ module decode(
 
     wire [11:0] decode_bits = { instr[30], instr[14:12], instr[6:0] };
 
-    // TODO: refactor separate scalar net decode entitites intto a single vector net
+    // TODO: refactor separate scalar net decode entitites into a single vector net
     // This simplifies passing the decoded entitites to other modules. To simplify indexing
     // into the vector net, constants for the indexes can be defined, like `define IS_ADDI 3
 
