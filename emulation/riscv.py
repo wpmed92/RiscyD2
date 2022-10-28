@@ -1,7 +1,3 @@
-#RISC-V Base integer instruction set v2.0
-#https://riscv.org/wp-content/uploads/2017/05/riscv-spec-v2.2.pdf
-#R, I, S, and U-type instructions
-
 from ram import *
 from util import *
 
@@ -15,141 +11,66 @@ class RiscV:
     self.registers = [0] * XLEN
     self.pc = 0
 
-    self.jump_table = {
-      # I-type
-      0b00000010011: self.addi,
-      0b10000010011: self.addi,
-      0b00100010011: self.slti,
-      0b10100010011: self.slti,
-      0b00110010011: self.sltiu,
-      0b10110010011: self.sltiu,
-      0b01000010011: self.xori,
-      0b11000010011: self.xori,
-      0b01100010011: self.ori,
-      0b11100010011: self.ori,
-      0b01110010011: self.andi,
-      0b11110010011: self.andi,
-      0b00010010011: self.slli,
-      0b01010010011: self.srli,
-      0b11010010011: self.srai,
+    self.jump_table_main = {
+      0b0010011: self.exe_integer_i,
+      0b0110011: self.exe_integer_r,
+      0b0110111: self.lui,
+      0b0010111: self.auipc,
+      0b1101111: self.jal,
+      0b1100111: self.jalr,
+      0b1100011: self.exe_control_flow,
+      0b0000011: self.exe_load,
+      0b0100011: self.exe_store
+    }
 
-      # R-type
-      0b00000110011: self.add,
-      0b10000110011: self.sub,
-      0b00010110011: self.sll,
-      0b00100110011: self.slt,
-      0b00110110011: self.sltu,
-      0b01000110011: self.xor,
-      0b01010110011: self.srl,
-      0b11010110011: self.sra,
-      0b01100110011: self._or,
-      0b01110110011: self._and,
+    #I-type integer arithmetic
+    self.jump_table_integer_i = {
+      0b000: self.addi,
+      0b010: self.slti,
+      0b011: self.sltiu,
+      0b100: self.xori,
+      0b110: self.ori,
+      0b111: self.andi,
+      0b001: self.slli,
+      0b101: self.srli_srai,
+    }
 
-      # Control flow
-      0b00001100011: self.beq,
-      0b10001100011: self.beq,
-      0b00011100011: self.bne,
-      0b10011100011: self.bne,
-      0b01001100011: self.blt,
-      0b11001100011: self.blt,
-      0b01011100011: self.bge,
-      0b11011100011: self.bge,
-      0b01101100011: self.bltu,
-      0b11101100011: self.bltu,
-      0b01111100011: self.bgeu,
-      0b11111100011: self.bgeu,
+    #R-type integer arithmetic
+    self.jump_table_integer_r = {
+      0b000: self.add_sub,
+      0b001: self.sll,
+      0b010: self.slt,
+      0b011: self.sltu,
+      0b100: self.xor,
+      0b101: self.srl_sra,
+      0b110: self._or,
+      0b111: self._and
+    }
 
-      # Load
-      0b00000000011: self.lb,
-      0b10000000011: self.lb,
-      0b00010000011: self.lh,
-      0b10010000011: self.lh,
-      0b00100000011: self.lw,
-      0b10100000011: self.lw,
-      0b01000000011: self.lbu,
-      0b11000000011: self.lbu,
-      0b01010000011: self.lhu,
-      0b11010000011: self.lhu,
+    #Control flow instructions
+    self.jump_table_control_flow = {
+      0b000: self.beq,
+      0b001: self.bne,
+      0b100: self.blt,
+      0b101: self.bge,
+      0b110: self.bltu,
+      0b111: self.bgeu
+    }
 
-      # Store
-      0b00000100011: self.sb,
-      0b10000100011: self.sb,
-      0b00010100011: self.sh,
-      0b10010100011: self.sh,
-      0b00100100011: self.sw,
-      0b10100100011: self.sw,
+    #Load instructions
+    self.jump_table_load = {
+      0b000: self.lb,
+      0b001: self.lh,
+      0b010: self.lw,
+      0b100: self.lbu,
+      0b101: self.lhu
+    }
 
-      # lui
-      0b00000110111: self.lui,
-      0b00010110111: self.lui,
-      0b00100110111: self.lui,
-      0b00110110111: self.lui,
-      0b01000110111: self.lui,
-      0b01010110111: self.lui,
-      0b01100110111: self.lui,
-      0b01110110111: self.lui,
-      0b10000110111: self.lui,
-      0b10010110111: self.lui,
-      0b10100110111: self.lui,
-      0b10110110111: self.lui,
-      0b11000110111: self.lui,
-      0b11010110111: self.lui,
-      0b11100110111: self.lui,
-      0b11110110111: self.lui,
-
-      # auipc
-      0b00000010111: self.auipc,
-      0b00010010111: self.auipc,
-      0b00100010111: self.auipc,
-      0b00110010111: self.auipc,
-      0b01000010111: self.auipc,
-      0b01010010111: self.auipc,
-      0b01100010111: self.auipc,
-      0b01110010111: self.auipc,
-      0b10000010111: self.auipc,
-      0b10010010111: self.auipc,
-      0b10100010111: self.auipc,
-      0b10110010111: self.auipc,
-      0b11000010111: self.auipc,
-      0b11010010111: self.auipc,
-      0b11100010111: self.auipc,
-      0b11110010111: self.auipc,
-
-      # jal
-      0b00001101111: self.jal,
-      0b00011101111: self.jal,
-      0b00101101111: self.jal,
-      0b00111101111: self.jal,
-      0b01001101111: self.jal,
-      0b01011101111: self.jal,
-      0b01101101111: self.jal,
-      0b01111101111: self.jal,
-      0b10001101111: self.jal,
-      0b10011101111: self.jal,
-      0b10101101111: self.jal,
-      0b10111101111: self.jal,
-      0b11001101111: self.jal,
-      0b11011101111: self.jal,
-      0b11101101111: self.jal,
-      0b11111101111: self.jal,
-
-      # jalr
-      0b00001100111: self.jalr,
-      0b00011100111: self.jalr,
-      0b00101100111: self.jalr,
-      0b00111100111: self.jalr,
-      0b01001100111: self.jalr,
-      0b01011100111: self.jalr,
-      0b01101100111: self.jalr,
-      0b01111100111: self.jalr,
-      0b10001100111: self.jalr,
-      0b10011100111: self.jalr,
-      0b10101100111: self.jalr,
-      0b10111100111: self.jalr,
-      0b11001100111: self.jalr,
-      0b11011100111: self.jalr,
-      0b11101100111: self.jalr,
-      0b11111100111: self.jalr
+    #Store instructions
+    self.jump_table_store = {
+      0b000: self.sb,
+      0b001: self.sh,
+      0b010: self.sw
     }
 
   def print_regs(self):
@@ -166,6 +87,7 @@ class RiscV:
   def step(self):
     op_integer = self.fetch()
     op_decoded = self.decode(op_integer)
+    print(op_integer)
 
     try:
       self.execute(op_decoded)
@@ -183,7 +105,22 @@ class RiscV:
     return Opcode(op_integer)
 
   def execute(self, opcode):
-    self.jump_table[opcode.decode_bits()](opcode)
+    self.jump_table_main[opcode.op()](opcode)
+
+  def exe_integer_i(self, opcode):
+    self.jump_table_integer_i[opcode.funct3()](opcode)
+
+  def exe_integer_r(self, opcode):
+    self.jump_table_integer_r[opcode.funct3()](opcode)
+
+  def exe_control_flow(self, opcode):
+    self.jump_table_control_flow[opcode.funct3()](opcode)
+
+  def exe_load(self, opcode):
+    self.jump_table_load[opcode.funct3()](opcode)
+
+  def exe_store(self, opcode):
+    self.jump_table_store[opcode.funct3()](opcode)
 
   def reg(self, index):
     return self.registers[index] & MASK_XLEN
@@ -231,6 +168,14 @@ class RiscV:
   def srli(self, opcode):
     self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) >> (opcode.imm12() & 0b11111)))
 
+  def srli_srai(self, opcode):
+    is_arithmetic_shift = (opcode.imm12() >> 5) > 0
+
+    if is_arithmetic_shift:
+      self.srai(opcode)
+    else:
+      self.srli(opcode)
+
   def srai(self, opcode):
     rs1 = self.reg(opcode.rs1())
 
@@ -238,12 +183,23 @@ class RiscV:
       rs1 = rs1 | (0xFFFFFFFF << 32)
 
     self.set_reg(opcode.rd(), (rs1 >> (opcode.imm12() & 0b11111)))
+  
+  def srli(self, opcode):
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) >> (opcode.imm12() & 0b11111)))
+
+  def add_sub(self, opcode):
+    is_sub = (opcode.imm12() >> 5) > 0
+
+    if is_sub:
+      self.sub(opcode)
+    else:
+      self.add(opcode)
 
   def add(self, opcode):
-      self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) + self.reg(opcode.rs2())))
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) + self.reg(opcode.rs2())))
 
   def sub(self, opcode):
-      self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) - self.reg(opcode.rs2())))
+    self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) - self.reg(opcode.rs2())))
 
   def sll(self, opcode):
     self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) << (self.reg(opcode.rs2()) & 0b11111)))
@@ -267,6 +223,14 @@ class RiscV:
   
   def xor(self, opcode):
     self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) ^ self.reg(opcode.rs2())))
+
+  def srl_sra(self, opcode):
+    is_arithmetic_shift = (opcode.imm12() >> 5) > 0
+
+    if is_arithmetic_shift:
+      self.sra(opcode)
+    else:
+      self.srl(opcode)
 
   def srl(self, opcode):
     self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) >> (self.reg(opcode.rs2()) & 0b11111)))
@@ -326,14 +290,14 @@ class RiscV:
 
   #Load instructions
   def calc_load_address(self, opcode):
-    return self.reg(opcode.rs1()) + sign_extend(opcode.imm12(), 11)
+    base = self.reg(opcode.rs1())
+    offset = sign_extend(opcode.imm12(), 11)
+    return base + offset
 
   def calc_store_address(self, opcode):
     offset = sign_extend(opcode.S(), 11)
     base = self.reg(opcode.rs1())
-    print("base=" + str(base) + "offset=" + str(offset))
-    return self.reg(opcode.rs1()) + sign_extend(opcode.S(), 11)
-
+    return base + offset
 
   def lb(self, opcode):
     address = self.calc_load_address(opcode)

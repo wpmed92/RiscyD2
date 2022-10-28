@@ -16,6 +16,6 @@ for reg_line in lines:
     reg_pair = reg_line.split(":")
     reg_idx = int(reg_pair[0])
     reg_value =  int(reg_pair[1], 16)
-    assert (expected_regs[reg_idx] == reg_value), "Register " + str(reg_idx) + " is " + str(reg_value) + ", but should be " + str(expected_regs[reg_idx])
+    assert (expected_regs[reg_idx] == reg_value), f'Register {reg_idx} is {reg_value}, but should be {expected_regs[reg_idx]}'
 
 print("PASSED")

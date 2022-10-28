@@ -34,9 +34,10 @@ if __name__ == "__main__":
             print("Read " + str(address) + " bytes into Ram.")
 
             while True:
-              cpu.print_regs()
               if not cpu.step():
                 break
+              
+              cpu.print_regs()
 
         except IOError:
           print('Error While Opening the file!')
