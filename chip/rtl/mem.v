@@ -31,7 +31,7 @@ module mem(
     always @(posedge clk) begin
         if (state == 3'd1) begin
             _instr_out = mem[pc[31:2]];
-        end else if (state == 3'd6 && enabled) begin
+        end else if (state == 3'd3 && enabled) begin
             if (load_enable) begin
                 if (is_lb) begin
                     byte = mem[address[31:2]][{address[1:0], 3'b0} +: 8];

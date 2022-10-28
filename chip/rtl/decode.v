@@ -1,6 +1,6 @@
+`include "riscv_defs.v"
+
 module decode(
-    input clk,
-    input [2:0] state,
     input [31:0] instr, 
     output [4:0] rs1,
     output rs1_valid,
@@ -44,6 +44,14 @@ module decode(
     output is_sra,
     output is_or,
     output is_and,
+    output is_mul,
+    output is_mulh,
+    output is_mulhsu,
+    output is_mulhu,
+    output is_div,
+    output is_divu,
+    output is_rem,
+    output is_remu,
     output is_auipc,
     output is_lui,
     output is_beq,
@@ -54,221 +62,104 @@ module decode(
     output is_bltu,
     output is_jal,
     output is_jalr
-);
-    reg _is_i_type;
-    reg _is_r_type;
-    reg _is_b_type;
-    reg _is_s_type;
-    reg _is_j_type;
-    reg _is_u_type;
+);    
+    wire is_i_type_q = (instr[6:2] == 5'b00000) || (instr[6:2] == 5'b00100) || (instr[6:2] == 5'b11001);
+    wire is_r_type_q = instr[6:2] == 5'b01100;
+    wire is_b_type_q = instr[6:2] == 5'b11000;
+    wire is_s_type_q = instr[6:2] == 5'b01000;
+    wire is_j_type_q = instr[6:2] == 5'b11011;
+    wire is_u_type_q = (instr[6:2] == 5'b01101) || (instr[6:2] == 5'b00101);
 
-    reg _rs1_valid;
-    reg _rs2_valid;
-    reg _rd_valid;
+    wire [4:0] rs1_q = instr[19:15];
+    wire [4:0] rs2_q = instr[24:20];
+    wire [4:0] rd_q = instr[11:7];
 
-    reg [4:0] _rs1;
-    reg [4:0] _rs2;
-    reg [4:0] _rd;
-    reg [31:0] _imm;
+    assign rs1_valid = !is_u_type_q && !is_j_type_q;
+    assign rs2_valid = is_s_type_q || is_r_type_q || is_b_type_q;
+    assign rd_valid = !is_s_type_q && !is_b_type_q;
 
-    reg _is_addi;
-    reg _is_slti;
-    reg _is_sltiu;
-    reg _is_xori;
-    reg _is_ori;
-    reg _is_andi;
-    reg _is_slli;
-    reg _is_srli;
-    reg _is_srai;
+    assign imm = is_i_type_q ? { {21{instr[31]}}, instr[30:20] } :
+                 is_b_type_q ? { {20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0 } :
+                 is_s_type_q ? { {21{instr[31]}}, instr[30:25], instr[11:7] } :
+                 is_j_type_q ? { {12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0  } :
+                 is_u_type_q ? { instr[31:12], 12'b0 } :
+                                                31'd0;
 
-    reg _is_load;
-    reg _is_store;
-    reg _is_lb;
-    reg _is_lh;
-    reg _is_lbu;
-    reg _is_lhu;
-    reg _is_lw;
-    reg _is_sb;
-    reg _is_sh;
-    reg _is_sw;
+    wire [11:0] decode_bits = { instr[30], instr[14:12], instr[6:0] };
 
-    reg _is_add;
-    reg _is_sub;
-    reg _is_sll;
-    reg _is_slt;
-    reg _is_sltu;
-    reg _is_xor;
-    reg _is_srl;
-    reg _is_sra;
-    reg _is_or;
-    reg _is_and;
+    // TODO: refactor separate scalar net decode entitites into a single vector net
+    // This simplifies passing the decoded entitites to other modules. To simplify indexing
+    // into the vector net, constants for the indexes can be defined, like `define IS_ADDI 3
 
-    reg _is_auipc;
-    reg _is_lui;
+    // Load/store
+    assign dec_out  = (instr & `INST_LB_MASK)  == `INST_LB;
+    assign is_lh    = (instr & `INST_LH_MASK)  == `INST_LH;
+    assign is_lw    = (instr & `INST_LW_MASK)  == `INST_LW;
+    assign is_lbu   = (instr & `INST_LBU_MASK) == `INST_LBU;
+    assign is_lhu   = (instr & `INST_LHU_MASK) == `INST_LHU;
+    assign is_sb    = (instr & `INST_SB_MASK)  == `INST_SB;
+    assign is_sh    = (instr & `INST_SH_MASK)  == `INST_SH;
+    assign is_sw    = (instr & `INST_SW_MASK)  == `INST_SW;
+    assign is_load  = instr[6:2] == 5'b00000;
+    assign is_store = instr[6:2] == 5'b01000;
 
-    reg _is_beq;
-    reg _is_bne;
-    reg _is_bge;
-    reg _is_bgeu;
-    reg _is_blt;
-    reg _is_bltu;
+    // I-type arithmetic
+    assign is_addi  = (instr & `INST_ADDI_MASK)  == `INST_ADDI;
+    assign is_slti  = (instr & `INST_SLTI_MASK)  == `INST_SLTI;
+    assign is_sltiu = (instr & `INST_SLTIU_MASK) == `INST_SLTIU;
+    assign is_xori  = (instr & `INST_XORI_MASK)  == `INST_XORI;
+    assign is_ori   = (instr & `INST_ORI_MASK)   == `INST_ORI;
+    assign is_andi  = (instr & `INST_ANDI_MASK)  == `INST_ANDI;
+    assign is_slli  = (instr & `INST_SLLI_MASK)  == `INST_SLLI;
+    assign is_srli  = (instr & `INST_SRLI_MASK)  == `INST_SRLI;
+    assign is_srai  = (instr & `INST_SRAI_MASK)  == `INST_SRAI;
 
-    reg _is_jal;
-    reg _is_jalr;
+    // R-type arithmetic
+    assign is_add  = (instr & `INST_ADD_MASK)  == `INST_ADD;
+    assign is_sub  = (instr & `INST_SUB_MASK)  == `INST_SUB;
+    assign is_sll  = (instr & `INST_SLL_MASK)  == `INST_SLL;
+    assign is_slt  = (instr & `INST_SLT_MASK)  == `INST_SLT;
+    assign is_sltu = (instr & `INST_SLTU_MASK) == `INST_SLTU;
+    assign is_xor  = (instr & `INST_XOR_MASK)  == `INST_XOR;
+    assign is_srl  = (instr & `INST_SRL_MASK)  == `INST_SRL;
+    assign is_sra  = (instr & `INST_SRA_MASK)  == `INST_SRA;
+    assign is_or   = (instr & `INST_OR_MASK)   == `INST_OR;
+    assign is_and  = (instr & `INST_AND_MASK)  == `INST_AND;
 
-    reg [10:0] decode_bits;
-    
-    always @(posedge clk) begin
-        if (state == 3'd2) begin
-            _is_i_type = (instr[6:2] == 5'b00000) || (instr[6:2] == 5'b00100) || (instr[6:2] == 5'b11001);
-            _is_r_type = instr[6:2] == 5'b01100;
-            _is_b_type = instr[6:2] == 5'b11000;
-            _is_s_type = instr[6:2] == 5'b01000;
-            _is_j_type = instr[6:2] == 5'b11011;
-            _is_u_type = (instr[6:2] == 5'b01101) || (instr[6:2] == 5'b00101);
+    //RV32M
+    assign is_mul    = (instr & `INST_MUL_MASK)    == `INST_MUL;
+    assign is_mulh   = (instr & `INST_MULH_MASK)   == `INST_MULH;
+    assign is_mulhsu = (instr & `INST_MULHSU_MASK) == `INST_MULHSU;
+    assign is_mulhu  = (instr & `INST_MULHU_MASK)  == `INST_MULHU;
+    assign is_div    = (instr & `INST_DIV_MASK)    == `INST_DIV;
+    assign is_divu   = (instr & `INST_DIVU_MASK)   == `INST_DIVU;
+    assign is_rem    = (instr & `INST_REM_MASK)    == `INST_REM;
+    assign is_remu   = (instr & `INST_REMU_MASK)   == `INST_REMU;
 
-            _rs1 = instr[19:15];
-            _rs2 = instr[24:20];
-            _rd = instr[11:7];
+    // Branch
+    assign is_beq  = (instr & `INST_BEQ_MASK)  == `INST_BEQ;
+    assign is_bne  = (instr & `INST_BNE_MASK)  == `INST_BNE;
+    assign is_bge  = (instr & `INST_BGE_MASK)  == `INST_BGE;
+    assign is_bgeu = (instr & `INST_BGEU_MASK) == `INST_BGEU;
+    assign is_blt  = (instr & `INST_BLT_MASK)  == `INST_BLT;
+    assign is_bltu = (instr & `INST_BLTU_MASK) == `INST_BLTU;
 
-            _rs1_valid = !_is_u_type && !_is_j_type;
-            _rs2_valid = _is_s_type || _is_r_type || _is_b_type;
-            _rd_valid = !_is_s_type && !_is_b_type;
+    // Jump
+    assign is_jal =  instr[6:2] == 5'b11011;
+    assign is_jalr = instr[6:2] == 5'b11001;
 
+    assign is_auipc = instr[6:2] == 5'b00101;
+    assign is_lui   = instr[6:2] == 5'b01101;
 
-            // Decode immediate based on instruction type
-            if (_is_i_type) begin
-                _imm = { {21{instr[31]}}, instr[30:20] };
-            end
-            else if (_is_b_type) begin
-                _imm = { {20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0 };
-            end
-            else if (_is_s_type) begin
-                _imm = { {21{instr[31]}}, instr[30:25], instr[11:7] };
-            end
-            else if (_is_j_type) begin
-                _imm = { {12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0  };
-            end
-            else if (_is_u_type) begin
-                _imm = { instr[31:12], 12'b0 };
-            end
-            else begin
-                _imm = 0;
-            end
+    assign is_i_type = is_i_type_q;
+    assign is_r_type = is_r_type_q;
+    assign is_b_type = is_b_type_q;
+    assign is_s_type = is_s_type_q;
+    assign is_j_type = is_j_type_q;
+    assign is_u_type = is_u_type_q;
 
-            decode_bits = { instr[30], instr[14:12], instr[6:0] };
-
-            // Load/store
-            _is_lb = decode_bits == 11'b0_000_0000011 || decode_bits == 11'b1_000_0000011;
-            _is_lh = decode_bits == 11'b0_001_0000011 || decode_bits == 11'b1_001_0000011;
-            _is_lw = decode_bits == 11'b0_010_0000011 || decode_bits == 11'b1_010_0000011;
-            _is_lbu = decode_bits == 11'b0_100_0000011 || decode_bits == 11'b1_100_0000011;
-            _is_lhu = decode_bits == 11'b0_101_0000011 || decode_bits == 11'b1_101_0000011;
-            _is_sb = decode_bits == 11'b0_000_0100011 || decode_bits == 11'b1_000_0100011;
-            _is_sh = decode_bits == 11'b0_001_0100011 || decode_bits == 11'b1_001_0100011;
-            _is_sw = decode_bits == 11'b0_010_0100011 || decode_bits == 11'b1_010_0100011;
-            _is_load = instr[6:2] == 5'b00000;
-            _is_store = instr[6:2] == 5'b01000;
-
-            // I-type arithmetic
-            _is_addi =  decode_bits == 11'b0_000_0010011  || decode_bits == 11'b1_000_0010011;
-            _is_slti =  decode_bits == 11'b0_010_0010011  || decode_bits == 11'b1_010_0010011;
-            _is_sltiu = decode_bits == 11'b0_011_0010011  || decode_bits == 11'b1_011_0010011;
-            _is_xori =  decode_bits == 11'b0_100_0010011  || decode_bits == 11'b1_100_0010011;
-            _is_ori = decode_bits == 11'b0_110_0010011  || decode_bits == 11'b1_110_0010011;
-            _is_andi =  decode_bits == 11'b0_111_0010011  || decode_bits == 11'b1_111_0010011;
-            _is_slli =  decode_bits == 11'b0_001_0010011;
-            _is_srli =  decode_bits == 11'b0_101_0010011;
-            _is_srai =  decode_bits == 11'b1_101_0010011;
-
-            // R-type arithmetic
-            _is_add  = decode_bits == 11'b0_000_0110011;
-            _is_sub  = decode_bits == 11'b1_000_0110011;
-            _is_sll  = decode_bits == 11'b0_001_0110011;
-            _is_slt  = decode_bits == 11'b0_010_0110011;
-            _is_sltu = decode_bits == 11'b0_011_0110011;
-            _is_xor  = decode_bits == 11'b0_100_0110011;
-            _is_srl  = decode_bits == 11'b0_101_0110011;
-            _is_sra  = decode_bits == 11'b1_101_0110011;
-            _is_or   = decode_bits == 11'b0_110_0110011;
-            _is_and  = decode_bits == 11'b0_111_0110011;
-
-            // Branch
-            _is_beq = decode_bits == 11'b0_000_1100011  || decode_bits == 11'b1_000_1100011;
-            _is_bne = decode_bits == 11'b0_001_1100011  || decode_bits == 11'b1_001_1100011;
-            _is_bge = decode_bits == 11'b0_101_1100011  || decode_bits == 11'b1_101_1100011;
-            _is_bgeu = decode_bits == 11'b0_111_1100011 || decode_bits == 11'b1_111_1100011;
-            _is_blt = decode_bits == 11'b0_100_1100011  || decode_bits == 11'b1_100_1100011;
-            _is_bltu = decode_bits == 11'b0_110_1100011 || decode_bits == 11'b1_110_1100011;
-
-            // Jump
-            _is_jal =  instr[6:2] == 5'b11011;
-            _is_jalr = instr[6:2] == 5'b11001;
-
-            _is_auipc = instr[6:2] == 5'b00101;
-            _is_lui   = instr[6:2] == 5'b01101;
-        end
-    end
-
-
-    assign is_i_type = _is_i_type;
-    assign is_r_type = _is_r_type;
-    assign is_b_type = _is_b_type;
-    assign is_s_type = _is_s_type;
-    assign is_j_type = _is_j_type;
-    assign is_u_type = _is_u_type;
-
-    assign rs1_valid = _rs1_valid;
-    assign rs2_valid = _rs2_valid;
-    assign rd_valid = _rd_valid;
-
-    assign is_load = _is_load;
-    assign is_store = _is_store;
-    assign is_lb = _is_lb;
-    assign is_lh = _is_lh;
-    assign is_lw = _is_lw;
-    assign is_sb = _is_sb;
-    assign is_sh = _is_sh;
-    assign is_sw = _is_sw;
-    assign is_lbu = _is_lbu;
-    assign is_lhu = _is_lhu;
-
-    assign is_addi =  _is_addi;
-    assign is_slti =  _is_slti;
-    assign is_sltiu = _is_sltiu;
-    assign is_xori =  _is_xori;
-    assign is_ori = _is_ori;
-    assign is_andi = _is_andi;
-    assign is_slli = _is_slli;
-    assign is_srli = _is_srli;
-    assign is_srai = _is_srai;
-
-    assign is_add  = _is_add;
-    assign is_sub  = _is_sub;
-    assign is_sll  = _is_sll;
-    assign is_slt  = _is_slt;
-    assign is_sltu = _is_sltu;
-    assign is_xor  = _is_xor;
-    assign is_srl  = _is_srl;
-    assign is_sra  = _is_sra;
-    assign is_or   = _is_or;
-    assign is_and  = _is_and;
-
-    assign is_auipc = _is_auipc;
-    assign is_lui   = _is_lui;
-
-    assign is_beq  = _is_beq;
-    assign is_bne  = _is_bne;
-    assign is_bge  = _is_bge;
-    assign is_bgeu = _is_bgeu;
-    assign is_blt  = _is_blt;
-    assign is_bltu = _is_bltu;
-
-    assign is_jal = _is_jal;
-    assign is_jalr = _is_jalr;
-
-    assign rs1 = _rs1;
-    assign rs2 = _rs2;
-    assign rd = _rd;
-    assign imm = _imm;
+    assign rs1 = rs1_q;
+    assign rs2 = rs2_q;
+    assign rd = rd_q;
+   
 endmodule

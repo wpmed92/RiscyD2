@@ -9,6 +9,8 @@ module test;
     reg [3:0] sw = 4'b0000;
 
     initial begin
+        $dumpfile("cpu.vcd");
+        $dumpvars;
        # 100000 $finish;
     end
 

@@ -69,6 +69,15 @@ class Parser:
       "sra": { "type": OpType.ARITHMETIC_R },
       "or":  { "type": OpType.ARITHMETIC_R },
       "and": { "type": OpType.ARITHMETIC_R },
+      #RV32M
+      "mul":    { "type": OpType.ARITHMETIC_R },
+      "mulh":   { "type": OpType.ARITHMETIC_R },
+      "mulhsu": { "type": OpType.ARITHMETIC_R },
+      "mulhu":  { "type": OpType.ARITHMETIC_R },
+      "div":    { "type": OpType.ARITHMETIC_R },
+      "divu":   { "type": OpType.ARITHMETIC_R },
+      "rem":    { "type": OpType.ARITHMETIC_R },
+      "remu":   { "type": OpType.ARITHMETIC_R },
       #Load I-type
       "lb":  { "type": OpType.LOAD },
       "lh":  { "type": OpType.LOAD },

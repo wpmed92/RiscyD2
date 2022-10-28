@@ -37,6 +37,16 @@ class Encoder:
       "or":    { "op": self.op_r, "funct3": 0b110, "funct7": 0,         "encode": self.encode_r_common },
       "and":   { "op": self.op_r, "funct3": 0b111, "funct7": 0,         "encode": self.encode_r_common },
 
+      #RV32M
+      "mul":    { "op": self.op_r, "funct3": 0b000, "funct7": 0b0000001, "encode": self.encode_r_common },
+      "mulh":   { "op": self.op_r, "funct3": 0b001, "funct7": 0b0000001, "encode": self.encode_r_common },
+      "mulhsu": { "op": self.op_r, "funct3": 0b010, "funct7": 0b0000001, "encode": self.encode_r_common },
+      "mulhu":  { "op": self.op_r, "funct3": 0b011, "funct7": 0b0000001, "encode": self.encode_r_common },
+      "div":    { "op": self.op_r, "funct3": 0b100, "funct7": 0b0000001, "encode": self.encode_r_common },
+      "divu":   { "op": self.op_r, "funct3": 0b101, "funct7": 0b0000001, "encode": self.encode_r_common },
+      "rem":    { "op": self.op_r, "funct3": 0b110, "funct7": 0b0000001, "encode": self.encode_r_common },
+      "remu":   { "op": self.op_r, "funct3": 0b111, "funct7": 0b0000001, "encode": self.encode_r_common },
+
       #Jump instructions (J-type)
       "jal":  { "op": self.op_jal,  "funct3": 0b000, "funct7": 0,       "encode": self.encode_jal },
       "jalr": { "op": self.op_jalr, "funct3": 0b000, "funct7": 0,       "encode": self.encode_i_common },
