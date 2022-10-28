@@ -37,14 +37,24 @@ class RiscV:
 
     #R-type integer arithmetic
     self.jump_table_integer_r = {
-      0b000: self.add_sub,
-      0b001: self.sll,
-      0b010: self.slt,
-      0b011: self.sltu,
-      0b100: self.xor,
-      0b101: self.srl_sra,
-      0b110: self._or,
-      0b111: self._and
+      0b0000000_000: self.add,
+      0b0100000_000: self.sub,
+      0b0000001_000: self.mul,
+      0b0000000_001: self.sll,
+      0b0000001_001: self.mulh,
+      0b0000000_010: self.slt,
+      0b0000001_010: self.mulhsu,
+      0b0000000_011: self.sltu,
+      0b0000001_011: self.mulhu,
+      0b0000000_100: self.xor,
+      0b0000001_100: self.div,
+      0b0000000_101: self.srl,
+      0b0100000_101: self.sra,
+      0b0000001_101: self.divu,
+      0b0000000_110: self._or,
+      0b0000001_110: self.rem,
+      0b0000000_111: self._and,
+      0b0000001_111: self.remu
     }
 
     #Control flow instructions
@@ -111,7 +121,7 @@ class RiscV:
     self.jump_table_integer_i[opcode.funct3()](opcode)
 
   def exe_integer_r(self, opcode):
-    self.jump_table_integer_r[opcode.funct3()](opcode)
+    self.jump_table_integer_r[opcode.funct7_3()](opcode)
 
   def exe_control_flow(self, opcode):
     self.jump_table_control_flow[opcode.funct3()](opcode)
@@ -187,14 +197,6 @@ class RiscV:
   def srli(self, opcode):
     self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) >> (opcode.imm12() & 0b11111)))
 
-  def add_sub(self, opcode):
-    is_sub = (opcode.imm12() >> 5) > 0
-
-    if is_sub:
-      self.sub(opcode)
-    else:
-      self.add(opcode)
-
   def add(self, opcode):
     self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) + self.reg(opcode.rs2())))
 
@@ -223,14 +225,6 @@ class RiscV:
   
   def xor(self, opcode):
     self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) ^ self.reg(opcode.rs2())))
-
-  def srl_sra(self, opcode):
-    is_arithmetic_shift = (opcode.imm12() >> 5) > 0
-
-    if is_arithmetic_shift:
-      self.sra(opcode)
-    else:
-      self.srl(opcode)
 
   def srl(self, opcode):
     self.set_reg(opcode.rd(), (self.reg(opcode.rs1()) >> (self.reg(opcode.rs2()) & 0b11111)))
@@ -335,6 +329,91 @@ class RiscV:
   def auipc(self, opcode):
     self.set_reg(opcode.rd(), self.pc + opcode.U())
 
+  #M-extension
+  #place lower bits
+  def mul(self, opcode):
+      rs1_val = self.reg(opcode.rs1())
+      rs2_val = self.reg(opcode.rs2())
+      self.set_reg(opcode.rd(), rs1_val * rs2_val)
+
+  #place higher bits: signed x signed
+  def mulh(self, opcode):
+    rs1_val = to_signed(self.reg(opcode.rs1()))
+    rs2_val = to_signed(self.reg(opcode.rs2()))
+    self.set_reg(opcode.rd(), (rs1_val * rs2_val) >> 32)
+
+  #place higher bits: signed x unsigned
+  def mulhsu(self, opcode):
+    rs1_val = to_signed(self.reg(opcode.rs1()))
+    rs2_val = self.reg(opcode.rs2())
+    self.set_reg(opcode.rd(), (rs1_val * rs2_val) >> 32)
+
+  #place higher bits: unsigned x unsigned
+  def mulhu(self, opcode):
+    rs1_val = self.reg(opcode.rs1())
+    rs2_val = self.reg(opcode.rs2())
+    self.set_reg(opcode.rd(), (rs1_val * rs2_val) >> 32)
+
+  def div(self, opcode):
+    rs1_val = to_signed(self.reg(opcode.rs1()))
+    rs2_val = to_signed(self.reg(opcode.rs2()))
+    rs1_sign_bit = (rs1_val >> 31) & 0b1
+    rs2_sign_bit = (rs2_val >> 31) & 0b1
+    abs_divisor = 0
+    abs_dividend = 0
+
+    if rs2_sign_bit:
+      abs_divisor = -rs2_val
+    else:
+      abs_divisor = rs2_val
+
+    if rs1_sign_bit:
+      abs_dividend = -rs1_val
+    else:
+      abs_dividend = rs1_val
+
+    u_result = abs_dividend // abs_divisor
+
+    if (rs1_sign_bit ^ rs2_sign_bit):
+      self.set_reg(opcode.rd(), -u_result)
+    else:
+      self.set_reg(opcode.rd(), u_result)
+
+  def divu(self, opcode):
+    rs1_val = self.reg(opcode.rs1())
+    rs2_val = self.reg(opcode.rs2())
+    self.set_reg(opcode.rd(), rs1_val // rs2_val)
+
+  def rem(self, opcode):
+    rs1_val = to_signed(self.reg(opcode.rs1()))
+    rs2_val = to_signed(self.reg(opcode.rs2()))
+    rs1_sign_bit = (rs1_val >> 31) & 0b1
+    rs2_sign_bit = (rs2_val >> 31) & 0b1
+    abs_divisor = 0
+    abs_dividend = 0
+
+    if rs2_sign_bit:
+      abs_divisor = -rs2_val
+    else:
+      abs_divisor = rs2_val
+
+    if rs1_sign_bit:
+      abs_dividend = -rs1_val
+    else:
+      abs_dividend = rs1_val
+
+    u_result = abs_dividend % abs_divisor
+
+    if (rs1_sign_bit ^ rs2_sign_bit):
+      self.set_reg(opcode.rd(), -u_result)
+    else:
+      self.set_reg(opcode.rd(), u_result)
+
+  def remu(self, opcode):
+    rs1_val = self.reg(opcode.rs1())
+    rs2_val = self.reg(opcode.rs2())
+    self.set_reg(opcode.rd(), rs1_val % rs2_val)
+
 class Opcode:
   op_integer = 0
 
@@ -358,6 +437,9 @@ class Opcode:
 
   def funct7(self):
     return (self.op_integer & (0b1111111 << 25)) >> 25
+
+  def funct7_3(self):
+    return self.funct3() | (self.funct7() << 3)
 
   def imm12(self):
     return self.rs2() | (self.funct7() << 5)
