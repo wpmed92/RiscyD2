@@ -142,9 +142,7 @@ class RiscV:
   #Integer Computational Instructions
   #Either R-type (register + register), or I-type (register + immediate)
   def addi(self, opcode):
-    print("ADDI called")
     self.set_reg(opcode.rd(), (sign_extend(opcode.imm12(), 11) + self.reg(opcode.rs1())))
-    return
   
   def slti(self, opcode):
     rs1 = self.reg(opcode.rs1())
@@ -286,12 +284,12 @@ class RiscV:
   def calc_load_address(self, opcode):
     base = self.reg(opcode.rs1())
     offset = sign_extend(opcode.imm12(), 11)
-    return base + offset
+    return to_signed(base) + to_signed(offset)
 
   def calc_store_address(self, opcode):
     offset = sign_extend(opcode.S(), 11)
     base = self.reg(opcode.rs1())
-    return base + offset
+    return to_signed(base) + to_signed(offset)
 
   def lb(self, opcode):
     address = self.calc_load_address(opcode)
@@ -307,7 +305,7 @@ class RiscV:
 
   def lbu(self, opcode):
     address = self.calc_load_address(opcode)
-    self.set_reg(opcode.rd(), zero_extend(self.ram.read16(address), 7))
+    self.set_reg(opcode.rd(), zero_extend(self.ram.read8(address), 7))
 
   def lhu(self, opcode):
     address = self.calc_load_address(opcode)
