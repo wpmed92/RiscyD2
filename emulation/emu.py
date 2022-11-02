@@ -2,8 +2,8 @@ from riscv import *
 import sys
 import os
 
-ram = RAM()
-cpu = RiscV(ram)
+bus = Bus()
+cpu = RiscV(bus)
 
 def main():
   print("RISC-V Base integer instruction set v2.0 emulation")
@@ -27,7 +27,7 @@ if __name__ == "__main__":
             address = 0
 
             while byte:
-              ram.write8(address, int.from_bytes(byte, byteorder="little", signed=False))
+              bus.write(8, address, int.from_bytes(byte, byteorder="little", signed=False))
               address += 1
               byte = rom.read(1)
 
@@ -37,7 +37,9 @@ if __name__ == "__main__":
               if not cpu.step():
                 break
               
-              cpu.print_regs()
+              #cpu.print_regs()
+            
+            print(f'took {cpu.cycle_counter} cycles to complete')
 
         except IOError:
           print('Error While Opening the file!')
