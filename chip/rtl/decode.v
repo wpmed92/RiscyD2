@@ -61,9 +61,10 @@ module decode(
     output is_blt,
     output is_bltu,
     output is_jal,
-    output is_jalr
+    output is_jalr,
+    output is_csrrs
 );    
-    wire is_i_type_q = (instr[6:2] == 5'b00000) || (instr[6:2] == 5'b00100) || (instr[6:2] == 5'b11001);
+    wire is_i_type_q = (instr[6:2] == 5'b00000) || (instr[6:2] == 5'b00100) || (instr[6:2] == 5'b11001) || (instr[6:2] == 5'b11100);
     wire is_r_type_q = instr[6:2] == 5'b01100;
     wire is_b_type_q = instr[6:2] == 5'b11000;
     wire is_s_type_q = instr[6:2] == 5'b01000;
@@ -150,6 +151,9 @@ module decode(
 
     assign is_auipc = instr[6:2] == 5'b00101;
     assign is_lui   = instr[6:2] == 5'b01101;
+
+    // CSR
+    assign is_csrrs = (instr & `INST_CSRRS_MASK) == `INST_CSRRS;
 
     assign is_i_type = is_i_type_q;
     assign is_r_type = is_r_type_q;

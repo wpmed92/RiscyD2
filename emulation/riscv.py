@@ -1,4 +1,4 @@
-from ram import *
+from bus import *
 from util import *
 
 #32-bit mode
@@ -6,10 +6,11 @@ XLEN = 32
 MASK_XLEN = 0xFFFFFFFF
 
 class RiscV:
-  def __init__(self, ram):
-    self.ram = ram
+  def __init__(self, bus):
+    self.bus = bus
     self.registers = [0] * XLEN
     self.pc = 0
+    self.cycle_counter = 0
 
     self.jump_table_main = {
       0b0010011: self.exe_integer_i,
@@ -20,7 +21,8 @@ class RiscV:
       0b1100111: self.jalr,
       0b1100011: self.exe_control_flow,
       0b0000011: self.exe_load,
-      0b0100011: self.exe_store
+      0b0100011: self.exe_store,
+      0b1110011: self.exe_system
     }
 
     #I-type integer arithmetic
@@ -83,6 +85,11 @@ class RiscV:
       0b010: self.sw
     }
 
+    #System calls
+    self.jump_table_system = {
+      0b010: self.csrrs
+    }
+
   def print_regs(self):
     reg_debug = ""
 
@@ -95,27 +102,30 @@ class RiscV:
 
 
   def step(self):
+    self.cycle_counter += 1
     op_integer = self.fetch()
     op_decoded = self.decode(op_integer)
-    print(op_integer)
 
     try:
       self.execute(op_decoded)
       self.pc += 4
-      print(str(self.pc))
+      #print(f'pc={self.pc}')
     except KeyError:
       return False
 
     return True
 
   def fetch(self):
-    return self.ram.read32(self.pc)
+    return self.bus.read(32, self.pc)
 
   def decode(self, op_integer):
     return Opcode(op_integer)
 
   def execute(self, opcode):
     self.jump_table_main[opcode.op()](opcode)
+
+  def exe_system(self, opcode):
+    self.jump_table_system[opcode.funct3()](opcode)
 
   def exe_integer_i(self, opcode):
     self.jump_table_integer_i[opcode.funct3()](opcode)
@@ -138,6 +148,18 @@ class RiscV:
   def set_reg(self, index, val):
     if (index > 0):
       self.registers[index] = val & MASK_XLEN
+
+  #TODO: Support more csrs
+  def csr(self, adr):
+    if adr == 0xC00:
+      return self.cycle_counter & 0xFFFFFFFF
+    elif adr == 0xC80:
+      return (self.cycle_counter >> 32) & 0xFFFFFFFF
+    else:
+      return 0
+
+  def csrrs(self, opcode):
+    self.set_reg(opcode.rd(), self.csr(opcode.imm12()))
 
   #Integer Computational Instructions
   #Either R-type (register + register), or I-type (register + immediate)
@@ -243,18 +265,17 @@ class RiscV:
 
   def jal(self, opcode):
     self.set_reg(opcode.rd(), self.pc + 4)
-    self.pc = (sign_extend(opcode.J(), 20) + self.pc) & MASK_XLEN
-    self.pc -= 4
+    self.pc += to_signed(sign_extend(opcode.J(), 20)) - 4
 
   def jalr(self, opcode):
     self.set_reg(opcode.rd(), self.pc + 4)
-    self.pc = (sign_extend(opcode.imm12(), 11) + self.reg(opcode.rs1())) & MASK_XLEN
-    self.pc -= 4
+    self.pc = self.reg(opcode.rs1()) + to_signed(sign_extend(opcode.imm12(), 11)) - 4
 
   #Branch instructions
   #B-type, +/- 4 KiB
   def set_branch_target(self, opcode):
-    self.pc = sign_extend(opcode.B(), 12) + self.pc
+    self.pc = to_signed(sign_extend(opcode.B(), 12)) + self.pc
+    self.pc -= 4
 
   def beq(self, opcode):
     if self.reg(opcode.rs1()) == self.reg(opcode.rs2()): 
@@ -284,42 +305,43 @@ class RiscV:
   def calc_load_address(self, opcode):
     base = self.reg(opcode.rs1())
     offset = sign_extend(opcode.imm12(), 11)
-    return to_signed(base) + to_signed(offset)
+    #print(f'base={base}, offset={offset}')
+    return base + to_signed(offset)
 
   def calc_store_address(self, opcode):
     offset = sign_extend(opcode.S(), 11)
     base = self.reg(opcode.rs1())
-    return to_signed(base) + to_signed(offset)
+    return base + to_signed(offset)
 
   def lb(self, opcode):
     address = self.calc_load_address(opcode)
-    self.set_reg(opcode.rd(), sign_extend(self.ram.read8(address), 7))
+    self.set_reg(opcode.rd(), sign_extend(self.bus.read(8, address), 7))
 
   def lh(self, opcode):
     address = self.calc_load_address(opcode)
-    self.set_reg(opcode.rd(), sign_extend(self.ram.read16(address), 15))
+    self.set_reg(opcode.rd(), sign_extend(self.bus.read(16, address), 15))
 
   def lw(self, opcode):
     address = self.calc_load_address(opcode)
-    self.set_reg(opcode.rd(), self.ram.read32(address))
+    self.set_reg(opcode.rd(), self.bus.read(32, address))
 
   def lbu(self, opcode):
     address = self.calc_load_address(opcode)
-    self.set_reg(opcode.rd(), zero_extend(self.ram.read8(address), 7))
+    self.set_reg(opcode.rd(), zero_extend(self.bus.read(8, address), 7))
 
   def lhu(self, opcode):
     address = self.calc_load_address(opcode)
-    self.set_reg(opcode.rd(), zero_extend(self.ram.read16(address), 15))
+    self.set_reg(opcode.rd(), zero_extend(self.bus.read(16, address), 15))
 
   #Store instructions
   def sb(self, opcode):
-    self.ram.write8(self.calc_store_address(opcode), self.reg(opcode.rs2()) & 0xFF)
+    self.bus.write(8, self.calc_store_address(opcode), self.reg(opcode.rs2()) & 0xFF)
       
   def sh(self, opcode):
-    self.ram.write16(self.calc_store_address(opcode), self.reg(opcode.rs2()) & 0xFFFF)
+    self.bus.write(16, self.calc_store_address(opcode), self.reg(opcode.rs2()) & 0xFFFF)
 
   def sw(self, opcode):
-    self.ram.write32(self.calc_store_address(opcode), self.reg(opcode.rs2()))
+    self.bus.write(32, self.calc_store_address(opcode), self.reg(opcode.rs2()))
 
   def lui(self, opcode):
     self.set_reg(opcode.rd(), opcode.U())
@@ -330,9 +352,9 @@ class RiscV:
   #M-extension
   #place lower bits
   def mul(self, opcode):
-      rs1_val = self.reg(opcode.rs1())
-      rs2_val = self.reg(opcode.rs2())
-      self.set_reg(opcode.rd(), rs1_val * rs2_val)
+    rs1_val = self.reg(opcode.rs1())
+    rs2_val = self.reg(opcode.rs2())
+    self.set_reg(opcode.rd(), rs1_val * rs2_val)
 
   #place higher bits: signed x signed
   def mulh(self, opcode):

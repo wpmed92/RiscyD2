@@ -49,15 +49,16 @@ class Parser:
     self.symbol_table = {}
     self.op_metadata = {
       #Arithemtic I-type
-      "addi": { "type": OpType.ARITHMETIC_I },
-      "slti": { "type": OpType.ARITHMETIC_I },
-      "sltiu":{ "type": OpType.ARITHMETIC_I },
-      "xori": { "type": OpType.ARITHMETIC_I },
-      "ori":  { "type": OpType.ARITHMETIC_I },
-      "andi": { "type": OpType.ARITHMETIC_I },
-      "slli": { "type": OpType.ARITHMETIC_I },
-      "srli": { "type": OpType.ARITHMETIC_I },
-      "srai": { "type": OpType.ARITHMETIC_I },
+      "addi":  { "type": OpType.ARITHMETIC_I },
+      "slti":  { "type": OpType.ARITHMETIC_I },
+      "sltiu": { "type": OpType.ARITHMETIC_I },
+      "xori":  { "type": OpType.ARITHMETIC_I },
+      "ori":   { "type": OpType.ARITHMETIC_I },
+      "andi":  { "type": OpType.ARITHMETIC_I },
+      "slli":  { "type": OpType.ARITHMETIC_I },
+      "srli":  { "type": OpType.ARITHMETIC_I },
+      "srai":  { "type": OpType.ARITHMETIC_I },
+      "csrrs": { "type": OpType.ARITHMETIC_I },
       #Arithmetic R-type
       "add": { "type": OpType.ARITHMETIC_R },
       "sub": { "type": OpType.ARITHMETIC_R },

@@ -1,13 +1,16 @@
 `include "rf.v"
 `include "decode.v"
 `include "alu.v"
-`include "mmu.v"
+`include "mmio.v"
 `include "branch.v"
+`include "csr_rf.v"
+
 
 module cpu(
         input CLK100MHZ, 
         output [3:0] led,
         input uart_txd_in,
+        output uart_rxd_out,
         input [3:0] sw
     );
     reg[31:0] pc = 0;
@@ -105,6 +108,10 @@ module cpu(
     wire is_jal;
     wire is_jalr;
 
+    // CSRRS
+    wire is_csrrs;
+    wire [31:0] csr_val;
+
     // Decode
     decode dec(
         instr,
@@ -167,7 +174,8 @@ module cpu(
         is_blt,
         is_bltu,
         is_jal,
-        is_jalr
+        is_jalr,
+        is_csrrs
     );
 
     rf register_file(
@@ -182,8 +190,18 @@ module cpu(
         rd_en,
         rd,
         is_load,
+        is_csrrs,
         alu_result,
-        load_result
+        load_result,
+        csr_val
+    );
+
+    csr_rf csr_register_file(
+        CLK100MHZ,
+        state,
+        is_csrrs,
+        imm[11:0],
+        csr_val
     );
 
     alu calc(
@@ -229,7 +247,7 @@ module cpu(
         address
     );
 
-    mmu memorymanager(
+    mmio mmio(
         CLK100MHZ,
         state,
         is_load,
@@ -249,6 +267,7 @@ module cpu(
         instr,
         led,
         uart_txd_in,
+        uart_rxd_out,
         sw
     );
 

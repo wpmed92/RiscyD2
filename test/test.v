@@ -5,6 +5,7 @@ module test;
     reg clk = 0; 
 
     wire tx;
+    wire rx;
     wire [3:0] leds;
     reg [3:0] sw = 4'b0000;
 
@@ -16,5 +17,5 @@ module test;
 
     always #5 clk = !clk;
 
-    cpu core (clk, leds, tx, sw);
+    cpu core (clk, leds, tx, rx, sw);
 endmodule
