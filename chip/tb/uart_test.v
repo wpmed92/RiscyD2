@@ -1,11 +1,14 @@
 `timescale 1ns/1ps
-`include "uart.v"
+`include "uart_rx.v"
+`include "uart_tx.v"
 
 module test_uart;
-    reg rx_clk = 0;
-    reg tx_clk = 0;
+    reg clk = 0;
 
-    reg rx = 1;
+    wire tx;
+    reg [7:0] tx_byte;
+    reg tx_en = 1;
+    wire tx_ready;
 
     reg [7:0] msg[0:3];
     reg [7:0] msg_back[0:3];
@@ -21,7 +24,7 @@ module test_uart;
     end
 
     initial begin
-        # 4218753 
+        # 4270560
         if (msg[0] == msg_back[0] && 
             msg[1] == msg_back[1] && 
             msg[2] == msg_back[2] && 
@@ -35,22 +38,19 @@ module test_uart;
         $finish;
     end
 
-    always #52083 tx_clk = !tx_clk;
-    always #5 rx_clk = !rx_clk; //imitate 100MHz clock
+    always #5 clk = !clk; //imitate 100MHz clock
 
     //Transmission side
-    always @(posedge tx_clk) begin
-        i = i + 1;
-        
-        if (i == 0) begin //start bit
-            rx = 0;
-            cur_byte = msg[byte_counter][7:0];
-        end else if (i < 9 && i > 0) begin
-            rx = (cur_byte >> (i-1)) & 1;
-        end else begin //stop bit
-            rx = 1;
-            i = -1;
-            byte_counter = byte_counter + 1;
+    reg already_counted = 0;
+
+    always @(posedge clk) begin
+        tx_byte <= msg[byte_counter][7:0];
+
+        if (tx_ready && !already_counted) begin
+            byte_counter <= byte_counter + 1;
+            already_counted <= 1;
+        end else if (!tx_ready) begin
+            already_counted <= 0;
         end
     end
 
@@ -60,21 +60,29 @@ module test_uart;
     wire byte_read;
 
     //Receiver side
-    always @(posedge rx_clk) begin
+    always @(posedge clk) begin
         if (byte_read && byte_read_prev == 0) begin
-            byte_read_prev = 1;
-            msg_back[rec_byte_i] = byte;
-            rec_byte_i = rec_byte_i + 1;
+            byte_read_prev <= 1;
+            msg_back[rec_byte_i] <= byte;
+            rec_byte_i <= rec_byte_i + 1;
         end else if (byte_read == 0 && byte_read_prev == 1) begin
-            byte_read_prev = 0;
+            byte_read_prev <= 0;
         end
     end
 
-    uart uart0(
-        rx_clk,
-        rx,
+    uart_rx uart0(
+        clk,
+        tx,
         byte,
         byte_read
+    );
+
+    uart_tx uart1(
+        clk,
+        tx_byte,
+        tx_en,
+        tx_ready,
+        tx
     );
 
 endmodule

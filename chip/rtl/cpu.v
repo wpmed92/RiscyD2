@@ -8,6 +8,7 @@ module cpu(
         input CLK100MHZ, 
         output [3:0] led,
         input uart_txd_in,
+        output uart_rxd_out,
         input [3:0] sw
     );
     reg[31:0] pc = 0;
@@ -249,6 +250,7 @@ module cpu(
         instr,
         led,
         uart_txd_in,
+        uart_rxd_out,
         sw
     );
 

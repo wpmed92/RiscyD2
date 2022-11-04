@@ -1,4 +1,4 @@
-MEMORY_TOP = 0x40000
+MEMORY_TOP = 0x32000
 
 class RAM:
     def __init__(self):

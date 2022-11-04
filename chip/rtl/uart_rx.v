@@ -1,4 +1,4 @@
-module uart(
+module uart_rx(
     input clk,
     input uart_txd_in,
     output [7:0] byte,
