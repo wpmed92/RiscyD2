@@ -1,7 +1,7 @@
 `include "mem.v"
 `include "gpio.v"
 
-module mmu(
+module mmio(
     input clk,
     input [2:0] state,
     input load_enable,

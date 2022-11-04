@@ -1,7 +1,7 @@
 `include "rf.v"
 `include "decode.v"
 `include "alu.v"
-`include "mmu.v"
+`include "mmio.v"
 `include "branch.v"
 
 module cpu(
@@ -229,7 +229,7 @@ module cpu(
         address
     );
 
-    mmu memorymanager(
+    mmio mmio(
         CLK100MHZ,
         state,
         is_load,
