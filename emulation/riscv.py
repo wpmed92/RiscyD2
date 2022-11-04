@@ -21,7 +21,8 @@ class RiscV:
       0b1100111: self.jalr,
       0b1100011: self.exe_control_flow,
       0b0000011: self.exe_load,
-      0b0100011: self.exe_store
+      0b0100011: self.exe_store,
+      0b1110011: self.exe_system
     }
 
     #I-type integer arithmetic
@@ -84,6 +85,11 @@ class RiscV:
       0b010: self.sw
     }
 
+    #System calls
+    self.jump_table_system = {
+      0b010: self.csrrs
+    }
+
   def print_regs(self):
     reg_debug = ""
 
@@ -118,6 +124,9 @@ class RiscV:
   def execute(self, opcode):
     self.jump_table_main[opcode.op()](opcode)
 
+  def exe_system(self, opcode):
+    self.jump_table_system[opcode.funct3()](opcode)
+
   def exe_integer_i(self, opcode):
     self.jump_table_integer_i[opcode.funct3()](opcode)
 
@@ -139,6 +148,18 @@ class RiscV:
   def set_reg(self, index, val):
     if (index > 0):
       self.registers[index] = val & MASK_XLEN
+
+  #TODO: Support more csrs
+  def csr(self, adr):
+    if adr == 0xC00:
+      return self.cycle_counter & 0xFFFFFFFF
+    elif adr == 0xC80:
+      return (self.cycle_counter >> 32) & 0xFFFFFFFF
+    else:
+      return 0
+
+  def csrrs(self, opcode):
+    self.set_reg(opcode.rd(), self.csr(opcode.imm12()))
 
   #Integer Computational Instructions
   #Either R-type (register + register), or I-type (register + immediate)
