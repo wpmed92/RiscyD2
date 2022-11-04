@@ -10,9 +10,10 @@ module rf(
     input rd_en,
     input [4:0] rd,
     input is_load,
+    input is_csr,
     input [31:0] alu_result,
-    input [31:0] load_result
-
+    input [31:0] load_result,
+    input [31:0] csr_val
 );
     reg [31:0] registers[0:31];
 
@@ -31,7 +32,9 @@ module rf(
             _rs1_val <= rs1_en ? registers[rs1] : 0;
             _rs2_val <= rs2_en ? registers[rs2] : 0;
         end else if (state == 3'd4 && rd_en && rd != 0) begin
-            registers[rd] = is_load ? load_result : alu_result;
+            registers[rd] = is_load ? load_result : 
+                            is_csr  ? csr_val :
+                            alu_result;
 
             for (i = 0; i < 32; i = i + 1)
                $display("%d:%h", i, registers[i]);

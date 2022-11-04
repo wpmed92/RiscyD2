@@ -3,6 +3,8 @@
 `include "alu.v"
 `include "mmio.v"
 `include "branch.v"
+`include "csr_rf.v"
+
 
 module cpu(
         input CLK100MHZ, 
@@ -106,6 +108,10 @@ module cpu(
     wire is_jal;
     wire is_jalr;
 
+    // CSRRS
+    wire is_csrrs;
+    wire [31:0] csr_val;
+
     // Decode
     decode dec(
         instr,
@@ -168,7 +174,8 @@ module cpu(
         is_blt,
         is_bltu,
         is_jal,
-        is_jalr
+        is_jalr,
+        is_csrrs
     );
 
     rf register_file(
@@ -183,8 +190,18 @@ module cpu(
         rd_en,
         rd,
         is_load,
+        is_csrrs,
         alu_result,
-        load_result
+        load_result,
+        csr_val
+    );
+
+    csr_rf csr_register_file(
+        CLK100MHZ,
+        state,
+        is_csrrs,
+        imm[11:0],
+        csr_val
     );
 
     alu calc(

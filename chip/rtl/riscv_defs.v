@@ -223,3 +223,7 @@
 // remu
 `define INST_REMU 32'h2007033
 `define INST_REMU_MASK 32'hfe00707f
+
+// csrrs
+`define INST_CSRRS 32'h2073
+`define INST_CSRRS_MASK 32'h707f

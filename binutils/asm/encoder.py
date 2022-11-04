@@ -12,6 +12,7 @@ class Encoder:
     self.op_jalr = 0b1100111
     self.op_lui = 0b0110111
     self.op_auipc = 0b0010111
+    self.op_system = 0b1110011
 
     self.encode_table = {
       #Arithmetic instructions (I-type)
@@ -73,7 +74,10 @@ class Encoder:
       #Store instructions (S-type)
       "sb": { "op": self.op_store, "funct3": 0b000, "funct7": 0, "encode": self.encode_store_common },
       "sh": { "op": self.op_store, "funct3": 0b001, "funct7": 0, "encode": self.encode_store_common },
-      "sw": { "op": self.op_store, "funct3": 0b010, "funct7": 0, "encode": self.encode_store_common }
+      "sw": { "op": self.op_store, "funct3": 0b010, "funct7": 0, "encode": self.encode_store_common },
+
+      #System
+      "csrrs": { "op": self.op_system, "funct3": 0b010, "funct7": 0, "encode": self.encode_i_common }
     }
 
   def to_little_endian_4byte_hex(self, num):

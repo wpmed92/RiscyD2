@@ -82,7 +82,8 @@ class Tokenizer:
       "nop": True,
       "j": True,
       "ret": True,
-      "call": True
+      "call": True,
+      "csrrs": True
     }
     
     self.abi_id_to_index = {
