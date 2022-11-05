@@ -1,5 +1,5 @@
-li x1, 0x1000 ;led base
-li x2, 0x1006 ;switch base
+li x1, 0x32000 ;led base
+li x2, 0x32009 ;switch base
 lbu x3, 0(x2) ;sw[0]
 lbu x4, 1(x2) ;sw[1]
 lbu x5, 2(x2) ;sw[2]
