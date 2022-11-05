@@ -1,6 +1,6 @@
 ;load an exe from UART
-li x1, 0x1004
-li x2, 0x1005
+li x1, 0x32007 ;rx_byte
+li x2, 0x32008 ;rx_byte_ready
 li x3, 0x200
 mv x6, x3
 li x9, 0

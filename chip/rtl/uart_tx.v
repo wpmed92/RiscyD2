@@ -24,7 +24,7 @@ always @(posedge clk) begin
                 _tx_ready <= 0;
                 _uart_rxd_out <= 0;
             end else if (tx_counter < 9 && tx_counter > 0) begin
-                _uart_rxd_out <= (byte >> (tx_counter - 1)) & 1;
+                _uart_rxd_out <= byte[tx_counter - 1];
             end else begin //stop bit
                 _uart_rxd_out <= 1;
                 tx_counter <= 0;

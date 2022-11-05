@@ -13,7 +13,7 @@ module test_uart;
     reg [7:0] msg[0:3];
     reg [7:0] msg_back[0:3];
     integer i = -1;
-    integer byte_counter = 0;
+    reg [1:0] byte_counter = 0;
     reg [7:0] cur_byte;
 
     initial begin
