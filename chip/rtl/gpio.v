@@ -58,7 +58,7 @@ module gpio(
      * 0x32009-0x3200C:  sw[0:3]                R        
      */
     always @(posedge clk) begin
-        port_select = address % 32;
+        port_select = address[3:0];
 
         if (state == 3'd3 && enabled) begin
             if (store_enable) begin
