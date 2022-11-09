@@ -9,7 +9,7 @@ module test_uart_with_cpu;
     reg rx = 1;
     wire [3:0] leds;
 
-    reg [7:0] exe[0:51];
+    reg [31:0] exe[0:57];
     reg start_transmission = 0;
 
     initial begin

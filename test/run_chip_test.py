@@ -1,21 +1,44 @@
 import subprocess
+import glob
+import os
 
 NUM_REGISTERS = 32
-expected_regs = [0x0, 0x15, 0x7, 0xfffffffc, 0x000000b4, 
-                 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1,
-                 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 
-                 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 
-                 0x1, 0x1, 0x0]
+test_cases = []
 
-p = subprocess.run(['./invoke_cpu.sh'], capture_output=True, text=True)
-lines = p.stdout.splitlines()[-NUM_REGISTERS:]
+def to_signed(n):
+    n = n & 0xffffffff
+    return (n ^ 0x80000000) - 0x80000000
 
-assert len(lines) > 0, f'Error while invoking CPU:\n{p.stderr}'
+def get_expected_regs(regs_path):
+    with open(regs_path) as f:
+        out = []
+        lines = f.read().splitlines()
+        for line in lines:
+            out.append(int(line.split("=")[1]))
 
-for reg_line in lines:
-    reg_pair = reg_line.split(":")
-    reg_idx = int(reg_pair[0])
-    reg_value =  int(reg_pair[1], 16)
-    assert (expected_regs[reg_idx] == reg_value), f'Register {reg_idx} is {reg_value}, but should be {expected_regs[reg_idx]}'
+        return out
 
-print("PASSED")
+def run_test(test_case):
+    compile_command = f'python3 ../binutils/asm/asm.py -i {test_case["asm"]} -o code.o'
+    run_command = "cd ../chip/rtl ; iverilog -o ../../test/test.chip ../../test/test.v ;  cd ../../test ; vvp test.chip"
+    p = subprocess.run(compile_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.run(run_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    lines = p.stdout.decode("utf-8").splitlines()[-NUM_REGISTERS:]
+
+    assert len(lines) > 0, f'Error while invoking CPU:\n{p.stderr}'
+
+    expected_regs = test_case["regs"]
+
+    for reg_line in lines:
+        reg_pair = reg_line.split(":")
+        reg_idx = int(reg_pair[0])
+        reg_value =  to_signed(int(reg_pair[1], 16))
+        assert (expected_regs[reg_idx] == reg_value), f'{test_case["asm"]} Error: Register {reg_idx} is {reg_value}, but should be {expected_regs[reg_idx]}'
+
+    print(f'{test_case["asm"]} PASSED')
+
+for test_asm in glob.glob("*.asm"):
+    run_test({ 
+        "asm": test_asm, 
+        "regs": get_expected_regs(os.path.splitext(test_asm)[0] + ".regs")
+    })
