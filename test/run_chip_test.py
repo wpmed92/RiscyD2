@@ -5,6 +5,10 @@ import os
 NUM_REGISTERS = 32
 test_cases = []
 
+def to_signed(n):
+    n = n & 0xffffffff
+    return (n ^ 0x80000000) - 0x80000000
+
 def get_expected_regs(regs_path):
     with open(regs_path) as f:
         out = []
@@ -28,7 +32,7 @@ def run_test(test_case):
     for reg_line in lines:
         reg_pair = reg_line.split(":")
         reg_idx = int(reg_pair[0])
-        reg_value =  int(reg_pair[1], 16)
+        reg_value =  to_signed(int(reg_pair[1], 16))
         assert (expected_regs[reg_idx] == reg_value), f'{test_case["asm"]} Error: Register {reg_idx} is {reg_value}, but should be {expected_regs[reg_idx]}'
 
     print(f'{test_case["asm"]} PASSED')
