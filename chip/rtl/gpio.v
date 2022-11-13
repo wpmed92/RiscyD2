@@ -1,6 +1,6 @@
 module gpio(
     input clk,
-    input [1:0] state,
+    input [2:0] state,
     input enabled,
     input load_enable,
     input store_enable,
@@ -12,7 +12,7 @@ module gpio(
     input is_sb,
     input is_sh,
     input is_sw,
-    input [31:0] address,
+    input [3:0] address,
     input [31:0] data_in,
     output [31:0] data_out,
     output [3:0] led_out,
@@ -54,9 +54,9 @@ module gpio(
      * 0x32009-0x3200C:  sw[0:3]                R        
      */
     always @(posedge clk) begin
-        if (state == 3'd2 && enabled) begin
+        if (state == 3'd3 && enabled) begin
             if (store_enable) begin
-                case (address[3:0])
+                case (address)
                     4'b0000   : led[0]   = data_in > 0;
                     4'b0001   : led[1]   = data_in > 0;
                     4'b0010   : led[2]   = data_in > 0;
@@ -65,7 +65,7 @@ module gpio(
                     4'b0101   : tx_byte  = data_in[7:0];
                 endcase
             end else if (load_enable) begin
-                case (address[3:0])
+                case (address)
                     4'b0110   : data  = { 30'b0, tx_ready };
                     4'b0111   : data  = { 24'b0, rx_byte };
                     4'b1000   : data  = { 31'b0, rx_byte_ready };

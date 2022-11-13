@@ -1,6 +1,6 @@
 module csr_rf(
     input clk,
-    input [1:0] state,
+    input [2:0] state,
     input en_csr,
     input [11:0] csr_adr,
     output [31:0] csr_val

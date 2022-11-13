@@ -1,6 +1,6 @@
 module mmio(
     input clk,
-    input [1:0] state,
+    input [2:0] state,
     input load_enable,
     input store_enable,
     input is_lb,
@@ -61,7 +61,7 @@ module mmio(
         is_sb,
         is_sh,
         is_sw,
-        address,
+        address[3:0],
         data_in,
         _gpio_out,
         led,

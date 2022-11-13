@@ -9,13 +9,14 @@ module cpu(
     reg read_en;
     wire [31:0] instr;
 
-    reg [1:0] state = 0;
+    reg [2:0] state = 0;
 
     // clk will increase state
     // 0 = fetch, decode
-    // 1 = rf, csr_rf read; execute (alu)
-    // 2 = mem/gpio access
-    // 3 = writeback
+    // 1 = rf, csr_rf read
+    // 2 = execute (alu)
+    // 3 = mem/gpio access
+    // 4 = writeback
 
     // Decode
     wire [4:0] rs1;
@@ -195,6 +196,8 @@ module cpu(
     );
 
     alu calc(
+        CLK100MHZ,
+        state,
         rs1_val,
         rs2_val,
         imm,
@@ -262,6 +265,8 @@ module cpu(
     );
 
     branch b(
+        CLK100MHZ,
+        state,
         rs1_val,
         rs2_val,
         is_beq,
@@ -276,11 +281,11 @@ module cpu(
     );
 
     always @ (posedge CLK100MHZ) begin
-        if (state == 3'd3) begin
+        if (state == 3'd4) begin
             pc <= taken_branch ? address : (pc + 4);
         end
 
-        state <= state + 1;
+        state <= (state + 1) % 5;
     end
 
 endmodule

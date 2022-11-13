@@ -1,4 +1,6 @@
 module alu(
+    input clk,
+    input [2:0] state,
     input [31:0] rs1_val,
     input [31:0] rs2_val,
     input [31:0] imm,
@@ -52,100 +54,102 @@ module alu(
     reg [31:0] abs_dividend;
     reg [31:0] u_result;
 
-    always @* begin
-        sext_rs1 = { {32{rs1_val[31]}}, rs1_val };
-        srai = sext_rs1 >> imm[4:0];
-        sra = sext_rs1 >> rs2_val;
+    always @(posedge clk) begin
+        if (state == 3'd2) begin
+            sext_rs1 = { {32{rs1_val[31]}}, rs1_val };
+            srai = sext_rs1 >> imm[4:0];
+            sra = sext_rs1 >> rs2_val;
 
-        if (is_addi) begin
-            _result = rs1_val + imm;
-        end else if (is_xori) begin
-            _result = rs1_val ^ imm;
-        end else if (is_ori) begin
-            _result = rs1_val | imm;
-        end else if (is_ori) begin
-            _result = rs1_val | imm;
-        end else if (is_andi) begin
-            _result = rs1_val & imm;
-        end else if (is_slli) begin
-            _result = rs1_val << imm[4:0];
-        end else if (is_srli) begin
-            _result = rs1_val >> imm[4:0];
-        end else if (is_srai) begin
-            _result = srai[31:0];
-        end else if (is_slti) begin
-            _result = { 31'b0, (rs1_val < imm) ^ (rs1_val[31] != imm[31]) };
-        end else if (is_sltiu) begin
-            _result = { 31'b0, rs1_val < imm };
-        end else if (is_add) begin
-            _result = rs1_val + rs2_val;
-        end else if (is_sub) begin
-            _result = rs1_val - rs2_val;
-        end else if (is_sll) begin
-            _result = rs1_val << rs2_val;
-        end else if (is_srl) begin
-            _result = rs1_val >> rs2_val;
-        end else if (is_sra) begin
-            _result = sra[31:0];
-        end else if (is_or) begin
-            _result = rs1_val | rs2_val;
-        end else if (is_xor) begin
-            _result = rs1_val ^ rs2_val;
-        end else if (is_and) begin
-            _result = rs1_val & rs2_val;
-        end else if (is_slt) begin
-            _result = { 31'b0, (rs1_val < rs2_val) ^ (rs1_val[31] != rs2_val[31]) };
-        end else if (is_sltu) begin
-            _result = { 31'b0, rs1_val < rs2_val };
-        end else if (is_auipc) begin
-            _result = pc + imm;
-        end else if (is_branch) begin
-            _address = pc + imm;
-        end else if (is_jal) begin
-            _address = pc + imm;
-            _result = pc + 4;
-        end else if (is_jalr) begin
-            _address = rs1_val + imm;
-            _result = pc + 4;
-        end else if (is_lui) begin
-            _result = imm;
-        end else if (is_load || is_store) begin
-            _address = rs1_val + imm;
-        //place lower bits
-        end else if (is_mul) begin
-            muldiv_res = rs1_val * rs2_val;
-            _result = muldiv_res[31:0];
-        //place higher bits: signed x signed
-        end else if (is_mulh) begin
-            muldiv_res = { {32{rs1_val[31]}}, rs1_val } * {{32{rs2_val[31]}}, rs2_val };
-            _result = muldiv_res[63:32];
-        //place higher bits: signed x unsigned
-        end else if (is_mulhsu) begin
-            muldiv_res = { {32{rs1_val[31]}}, rs1_val } * { 32'b0, rs2_val };
-            _result = muldiv_res[63:32];
-        //place higher bits: unsigned x unsigned
-        end else if (is_mulhu) begin
-            muldiv_res = {32'b0, rs1_val } * { 32'b0, rs2_val };
-            _result = muldiv_res[63:32];
-        end else if (is_div) begin
-            abs_divisor = (rs2_val[31]) ? -rs2_val : rs2_val;
-            abs_dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
-            u_result = abs_dividend / abs_divisor;
-            
-            _result = (rs1_val[31] ^ rs2_val[31]) ? -u_result : u_result;
-        end else if (is_divu) begin
-            _result = rs1_val / rs2_val;
-        end else if (is_rem) begin
-            abs_divisor = (rs2_val[31]) ? -rs2_val : rs2_val;
-            abs_dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
-            u_result = abs_dividend % abs_divisor;
-            
-            _result = (rs1_val[31] ^ rs2_val[31]) ? -u_result : u_result;
-        end else if (is_remu) begin
-            _result = rs1_val % rs2_val;
-        end else begin
-            _result = 0;
-            _address = 0;
+            if (is_addi) begin
+                _result = rs1_val + imm;
+            end else if (is_xori) begin
+                _result = rs1_val ^ imm;
+            end else if (is_ori) begin
+                _result = rs1_val | imm;
+            end else if (is_ori) begin
+                _result = rs1_val | imm;
+            end else if (is_andi) begin
+                _result = rs1_val & imm;
+            end else if (is_slli) begin
+                _result = rs1_val << imm[4:0];
+            end else if (is_srli) begin
+                _result = rs1_val >> imm[4:0];
+            end else if (is_srai) begin
+                _result = srai[31:0];
+            end else if (is_slti) begin
+                _result = { 31'b0, (rs1_val < imm) ^ (rs1_val[31] != imm[31]) };
+            end else if (is_sltiu) begin
+                _result = { 31'b0, rs1_val < imm };
+            end else if (is_add) begin
+                _result = rs1_val + rs2_val;
+            end else if (is_sub) begin
+                _result = rs1_val - rs2_val;
+            end else if (is_sll) begin
+                _result = rs1_val << rs2_val;
+            end else if (is_srl) begin
+                _result = rs1_val >> rs2_val;
+            end else if (is_sra) begin
+                _result = sra[31:0];
+            end else if (is_or) begin
+                _result = rs1_val | rs2_val;
+            end else if (is_xor) begin
+                _result = rs1_val ^ rs2_val;
+            end else if (is_and) begin
+                _result = rs1_val & rs2_val;
+            end else if (is_slt) begin
+                _result = { 31'b0, (rs1_val < rs2_val) ^ (rs1_val[31] != rs2_val[31]) };
+            end else if (is_sltu) begin
+                _result = { 31'b0, rs1_val < rs2_val };
+            end else if (is_auipc) begin
+                _result = pc + imm;
+            end else if (is_branch) begin
+                _address = pc + imm;
+            end else if (is_jal) begin
+                _address = pc + imm;
+                _result = pc + 4;
+            end else if (is_jalr) begin
+                _address = rs1_val + imm;
+                _result = pc + 4;
+            end else if (is_lui) begin
+                _result = imm;
+            end else if (is_load || is_store) begin
+                _address = rs1_val + imm;
+            //place lower bits
+            end else if (is_mul) begin
+                muldiv_res = rs1_val * rs2_val;
+                _result = muldiv_res[31:0];
+            //place higher bits: signed x signed
+            end else if (is_mulh) begin
+                muldiv_res = { {32{rs1_val[31]}}, rs1_val } * {{32{rs2_val[31]}}, rs2_val };
+                _result = muldiv_res[63:32];
+            //place higher bits: signed x unsigned
+            end else if (is_mulhsu) begin
+                muldiv_res = { {32{rs1_val[31]}}, rs1_val } * { 32'b0, rs2_val };
+                _result = muldiv_res[63:32];
+            //place higher bits: unsigned x unsigned
+            end else if (is_mulhu) begin
+                muldiv_res = {32'b0, rs1_val } * { 32'b0, rs2_val };
+                _result = muldiv_res[63:32];
+            end else if (is_div) begin
+                abs_divisor = (rs2_val[31]) ? -rs2_val : rs2_val;
+                abs_dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
+                u_result = abs_dividend / abs_divisor;
+                
+                _result = (rs1_val[31] ^ rs2_val[31]) ? -u_result : u_result;
+            end else if (is_divu) begin
+                _result = rs1_val / rs2_val;
+            end else if (is_rem) begin
+                abs_divisor = (rs2_val[31]) ? -rs2_val : rs2_val;
+                abs_dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
+                u_result = abs_dividend % abs_divisor;
+                
+                _result = (rs1_val[31] ^ rs2_val[31]) ? -u_result : u_result;
+            end else if (is_remu) begin
+                _result = rs1_val % rs2_val;
+            end else begin
+                _result = 0;
+                _address = 0;
+            end
         end
     end
 
