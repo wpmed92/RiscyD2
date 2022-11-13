@@ -1,9 +1,6 @@
-`include "mem.v"
-`include "gpio.v"
-
 module mmio(
     input clk,
-    input [2:0] state,
+    input [1:0] state,
     input load_enable,
     input store_enable,
     input is_lb,
@@ -24,7 +21,7 @@ module mmio(
     output uart_rxd_out,
     input [3:0] sw
 );
-    wire en_bram = (address >= 0) && (address < 'h32000);
+    wire en_bram = (address >= 0) && (address < 'h2404);
     wire en_gpio = address >= 'h32000;
     wire [31:0] _bram_out;
     wire [31:0] _gpio_out;

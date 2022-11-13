@@ -20,7 +20,11 @@ def get_expected_regs(regs_path):
 
 def run_test(test_case):
     compile_command = f'python3 ../binutils/asm/asm.py -i {test_case["asm"]} -o code.o'
-    run_command = "cd ../chip/rtl ; iverilog -o ../../test/test.chip ../../test/test.v ;  cd ../../test ; vvp test.chip"
+    run_command =  "cd ../chip/rtl;"
+    run_command += "iverilog -o ../../test/test.chip cpu.v alu.v branch.v csr_rf.v decode.v gpio.v mem.v mmio.v rf.v uart_rx.v uart_tx.v ../../test/test.v ;"
+    run_command += "cd ../../test ;"
+    run_command += "vvp test.chip"
+
     p = subprocess.run(compile_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p = subprocess.run(run_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     lines = p.stdout.decode("utf-8").splitlines()[-NUM_REGISTERS:]

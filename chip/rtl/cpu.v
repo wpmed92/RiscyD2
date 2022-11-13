@@ -1,11 +1,3 @@
-`include "rf.v"
-`include "decode.v"
-`include "alu.v"
-`include "mmio.v"
-`include "branch.v"
-`include "csr_rf.v"
-
-
 module cpu(
         input CLK100MHZ, 
         output [3:0] led,
@@ -17,15 +9,13 @@ module cpu(
     reg read_en;
     wire [31:0] instr;
 
-    reg [2:0] state = 0;
+    reg [1:0] state = 0;
 
     // clk will increase state
-    // 1 = fetch (imem)
-    // 2 = decode (decode)
-    // 3 = operand read (rf)
-    // 4 = calculation (address or arithmetic, performed by alu)
-    // 5 = load/store (dmem)
-    // 6 = write back to destination register (rf)
+    // 0 = fetch, decode
+    // 1 = rf, csr_rf read; execute (alu)
+    // 2 = mem/gpio access
+    // 3 = writeback
 
     // Decode
     wire [4:0] rs1;
@@ -247,7 +237,7 @@ module cpu(
         address
     );
 
-    mmio mmio(
+    mmio mmio_instance(
         CLK100MHZ,
         state,
         is_load,
@@ -286,11 +276,11 @@ module cpu(
     );
 
     always @ (posedge CLK100MHZ) begin
-        if (state == 3'd4) begin
+        if (state == 3'd3) begin
             pc <= taken_branch ? address : (pc + 4);
         end
 
-        state <= (state % 4) + 1;
+        state <= state + 1;
     end
 
 endmodule

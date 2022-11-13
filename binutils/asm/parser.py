@@ -153,7 +153,6 @@ class Parser:
     stmt = OpStatement()
     stmt.type = op_type
     stmt.name = op_name
-
     if "expand" in op_meta:
       stmt.expand = op_meta["expand"]
 
@@ -222,7 +221,7 @@ class Parser:
         self.advance_token()
         stmt.rs2 = self.cur_token().val
       else:
-        raise Exception("Expected a register identifier")
+        raise Exception(f'Expected a register identifier pos: {self.cur_token().pos}')
 
     return stmt
 

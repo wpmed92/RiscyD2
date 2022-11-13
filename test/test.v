@@ -1,5 +1,4 @@
 `timescale 1us/1us
-`include "cpu.v"
 
 module test;
     reg clk = 0; 

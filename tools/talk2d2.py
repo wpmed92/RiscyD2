@@ -31,6 +31,7 @@ def send_exe(path):
             exe_bytes.append(byte)
 
   # First 4 bytes are size of the exe
+  print("Len=" + str(len(exe_bytes)))
   exe_bytes.insert(0, len(exe_bytes).to_bytes(1, "little"))
   exe_bytes.insert(1, b'\x00')
   exe_bytes.insert(2, b'\x00')
@@ -39,7 +40,8 @@ def send_exe(path):
   for exe_byte in exe_bytes:
       print(exe_byte)
       ser.write(exe_byte)
-      time.sleep(0.001)
+      time.sleep(0.01)
+
 
 if __name__ == "__main__":
   args = parser.parse_args()

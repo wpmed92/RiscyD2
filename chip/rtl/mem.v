@@ -1,6 +1,6 @@
 module mem(
     input clk,
-    input [2:0] state,
+    input [1:0] state,
     input enabled,
     input load_enable,
     input store_enable,
@@ -18,7 +18,7 @@ module mem(
     output [31:0] data_out,
     output [31:0] instr_out
 );
-    reg [31:0] mem [0:'h31FFF];
+    reg [31:0] mem [0:'h2403];
     reg [31:0] data;
     reg [31:0] _instr_out;
     reg [7:0] byte;
@@ -29,9 +29,9 @@ module mem(
     end
 
     always @(posedge clk) begin
-        if (state == 3'd1) begin
+        if (state == 3'd0) begin
             _instr_out = mem[pc[31:2]];
-        end else if (state == 3'd3 && enabled) begin
+        end else if (state == 3'd2 && enabled) begin
             if (load_enable) begin
                 if (is_lb) begin
                     byte = mem[address[31:2]][{address[1:0], 3'b0} +: 8];

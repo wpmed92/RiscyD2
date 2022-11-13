@@ -110,7 +110,7 @@ module alu(
         end else if (is_lui) begin
             _result = imm;
         end else if (is_load || is_store) begin
-            _result = rs1_val + imm;
+            _address = rs1_val + imm;
         //place lower bits
         end else if (is_mul) begin
             muldiv_res = rs1_val * rs2_val;

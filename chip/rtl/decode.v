@@ -93,7 +93,7 @@ module decode(
     // into the vector net, constants for the indexes can be defined, like `define IS_ADDI 3
 
     // Load/store
-    assign dec_out  = (instr & `INST_LB_MASK)  == `INST_LB;
+    assign is_lb  = (instr & `INST_LB_MASK)  == `INST_LB;
     assign is_lh    = (instr & `INST_LH_MASK)  == `INST_LH;
     assign is_lw    = (instr & `INST_LW_MASK)  == `INST_LW;
     assign is_lbu   = (instr & `INST_LBU_MASK) == `INST_LBU;
