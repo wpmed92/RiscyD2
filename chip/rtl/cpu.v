@@ -1,4 +1,5 @@
 `include "riscv_defs.v"
+`include "extension_defs.v"
 
 module cpu(
         input CLK100MHZ, 

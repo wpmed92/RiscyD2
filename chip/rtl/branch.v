@@ -1,3 +1,5 @@
+`include "constant_defs.v"
+
 module branch(
     input clk,
     input [2:0] state,
@@ -16,7 +18,7 @@ module branch(
     reg _taken_branch = 0;
 
     always @(posedge clk) begin
-        if (state == 3'd2) begin
+        if (state == `EXECUTE) begin
             if (is_beq) begin
                 _taken_branch <= rs1_val == rs2_val;
             end else if (is_bne) begin

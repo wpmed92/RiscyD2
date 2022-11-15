@@ -1,4 +1,5 @@
-`include "riscv_defs.v"
+`include "extension_defs.v"
+`include "constant_defs.v"
 
 module alu(
     input clk,
@@ -59,7 +60,7 @@ module alu(
     reg [31:0] u_result;
 
     always @(posedge clk) begin
-        if (state == 3'd2) begin
+        if (state == `EXECUTE) begin
             sext_rs1 = { {32{rs1_val[31]}}, rs1_val };
             srai = sext_rs1 >> imm[4:0];
             sra = sext_rs1 >> rs2_val;
