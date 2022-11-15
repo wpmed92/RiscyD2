@@ -23,23 +23,23 @@ def send_exe(path):
 
   with open(path, "rb") as exe:
       byte = exe.read(1)
-      exe_bytes.append(byte)
+      exe_bytes.append(int.from_bytes(byte, "little"))
 
       while byte:
           byte = exe.read(1)
           if (byte != b''):
-            exe_bytes.append(byte)
+            exe_bytes.append(int.from_bytes(byte, "little"))
 
   # First 4 bytes are size of the exe
-  exe_bytes.insert(0, len(exe_bytes).to_bytes(1, "little"))
-  exe_bytes.insert(1, b'\x00')
-  exe_bytes.insert(2, b'\x00')
-  exe_bytes.insert(3, b'\x00')
+  print("Len=" + str(len(exe_bytes)))
+  exe_bytes.insert(0, len(exe_bytes))
+  exe_bytes.insert(1, 0)
+  exe_bytes.insert(2, 0)
+  exe_bytes.insert(3, 0)
 
-  for exe_byte in exe_bytes:
-      print(exe_byte)
-      ser.write(exe_byte)
-      time.sleep(0.001)
+  ser.write(exe_bytes)
+
+  time.sleep(2)
 
 if __name__ == "__main__":
   args = parser.parse_args()

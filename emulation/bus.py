@@ -10,12 +10,12 @@ class Bus:
         if address < MEMORY_TOP:
             return self.ram.read(bits, address)
         else:
-            uart_port = (address - MEMORY_TOP) % 2
+            uart_port = address % 2
             return self.uart.read(uart_port)
 
     def write(self, bits, address, val):
         if address < MEMORY_TOP:
             self.ram.write(bits, address, val)
         else:
-            uart_port = (address - MEMORY_TOP) % 2
+            uart_port = address % 2
             self.uart.write(uart_port, val)

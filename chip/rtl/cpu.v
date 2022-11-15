@@ -1,10 +1,5 @@
-`include "rf.v"
-`include "decode.v"
-`include "alu.v"
-`include "mmio.v"
-`include "branch.v"
-`include "csr_rf.v"
-
+`include "riscv_defs.v"
+`include "extension_defs.v"
 
 module cpu(
         input CLK100MHZ, 
@@ -20,12 +15,11 @@ module cpu(
     reg [2:0] state = 0;
 
     // clk will increase state
-    // 1 = fetch (imem)
-    // 2 = decode (decode)
-    // 3 = operand read (rf)
-    // 4 = calculation (address or arithmetic, performed by alu)
-    // 5 = load/store (dmem)
-    // 6 = write back to destination register (rf)
+    // 0 = fetch, decode
+    // 1 = rf, csr_rf read
+    // 2 = execute (alu)
+    // 3 = mem/gpio access
+    // 4 = writeback
 
     // Decode
     wire [4:0] rs1;
@@ -75,6 +69,7 @@ module cpu(
     wire is_lui;
 
     //RV32M
+`ifdef M_EXTENSION
     wire is_mul;
     wire is_mulh;
     wire is_mulhsu;
@@ -83,6 +78,7 @@ module cpu(
     wire is_divu;
     wire is_rem;
     wire is_remu;
+`endif
 
     // Load/store
     wire is_load;
@@ -157,6 +153,7 @@ module cpu(
         is_sra,
         is_or,
         is_and,
+    `ifdef M_EXTENSION
         is_mul,
         is_mulh,
         is_mulhsu,
@@ -165,6 +162,7 @@ module cpu(
         is_divu,
         is_rem,
         is_remu,
+    `endif
         is_auipc,
         is_lui,
         is_beq,
@@ -205,6 +203,8 @@ module cpu(
     );
 
     alu calc(
+        CLK100MHZ,
+        state,
         rs1_val,
         rs2_val,
         imm,
@@ -228,6 +228,7 @@ module cpu(
         is_sra,
         is_or,
         is_and,
+    `ifdef M_EXTENSION
         is_mul,
         is_mulh,
         is_mulhsu,
@@ -236,6 +237,7 @@ module cpu(
         is_divu,
         is_rem,
         is_remu,
+    `endif
         is_auipc,
         is_lui,
         is_load,
@@ -247,7 +249,7 @@ module cpu(
         address
     );
 
-    mmio mmio(
+    mmio mmio_instance(
         CLK100MHZ,
         state,
         is_load,
@@ -272,6 +274,8 @@ module cpu(
     );
 
     branch b(
+        CLK100MHZ,
+        state,
         rs1_val,
         rs2_val,
         is_beq,
@@ -290,7 +294,7 @@ module cpu(
             pc <= taken_branch ? address : (pc + 4);
         end
 
-        state <= (state % 4) + 1;
+        state <= (state + 1) % 5;
     end
 
 endmodule

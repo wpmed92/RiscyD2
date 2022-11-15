@@ -1,3 +1,6 @@
+`include "constant_defs.v"
+`include "extension_defs.v"
+
 module rf(
     input clk,
     input [2:0] state,
@@ -28,16 +31,18 @@ module rf(
     end
 
     always @(posedge clk) begin
-        if (state == 3'd2) begin
+        if (state == `REG_FILE_READ) begin
             _rs1_val <= rs1_en ? registers[rs1] : 0;
             _rs2_val <= rs2_en ? registers[rs2] : 0;
-        end else if (state == 3'd4 && rd_en && rd != 0) begin
+        end else if (state == `WRITE_BACK && rd_en && rd != 0) begin
             registers[rd] = is_load ? load_result : 
                             is_csr  ? csr_val :
                             alu_result;
 
+        `ifdef ISA_TEST
             for (i = 0; i < 32; i = i + 1)
                $display("%d:%h", i, registers[i]);
+        `endif
         end
     end
 

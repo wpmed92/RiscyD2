@@ -1,0 +1,12 @@
+li x1, 0xFF
+li x2, 0xFFFF
+li x3, 0xFFFFFFFF
+li x4, 200
+sb x1, 0(x4)
+sh x2, 2(x4)
+sw x3, 4(x4)
+lb x5, 0(x4)
+lbu x6, 0(x4)
+lh x7, 2(x4)
+lhu x8, 2(x4)
+lw x9, 4(x4)

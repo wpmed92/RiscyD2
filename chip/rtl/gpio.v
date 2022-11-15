@@ -1,5 +1,4 @@
-`include "uart_rx.v"
-`include "uart_tx.v"
+`include "constant_defs.v"
 
 module gpio(
     input clk,
@@ -15,7 +14,7 @@ module gpio(
     input is_sb,
     input is_sh,
     input is_sw,
-    input [31:0] address,
+    input [3:0] address,
     input [31:0] data_in,
     output [31:0] data_out,
     output [3:0] led_out,
@@ -26,21 +25,20 @@ module gpio(
 
     reg [3:0] led = 4'b0000;
     reg [31:0] data;
-    reg [3:0] port_select;
     wire [7:0] rx_byte;
     wire rx_byte_ready;
     wire tx_ready;
     reg tx_en = 0;
     reg [7:0] tx_byte = 0;
 
-    uart_rx uart_rx(
+    uart_rx uart0(
         clk,
         uart_txd_in,
         rx_byte,
         rx_byte_ready
     );
 
-    uart_tx uart_tx(
+    uart_tx uart1(
         clk,
         tx_byte,
         tx_en,
@@ -58,11 +56,9 @@ module gpio(
      * 0x32009-0x3200C:  sw[0:3]                R        
      */
     always @(posedge clk) begin
-        port_select = address[3:0];
-
-        if (state == 3'd3 && enabled) begin
+        if (state == `LOAD_STORE && enabled) begin
             if (store_enable) begin
-                case (port_select)
+                case (address)
                     4'b0000   : led[0]   = data_in > 0;
                     4'b0001   : led[1]   = data_in > 0;
                     4'b0010   : led[2]   = data_in > 0;
@@ -71,14 +67,14 @@ module gpio(
                     4'b0101   : tx_byte  = data_in[7:0];
                 endcase
             end else if (load_enable) begin
-                case (port_select)
+                case (address)
                     4'b0110   : data  = { 30'b0, tx_ready };
                     4'b0111   : data  = { 24'b0, rx_byte };
-                    4'b1000   : data  = { 30'b0, rx_byte_ready };
-                    4'b1001   : data  = { 30'b0, sw[0] };
-                    4'b1010   : data  = { 30'b0, sw[1] };
-                    4'b1011   : data  = { 30'b0, sw[2] };
-                    4'b1100   : data  = { 30'b0, sw[3] };
+                    4'b1000   : data  = { 31'b0, rx_byte_ready };
+                    4'b1001   : data  = { 31'b0, sw[0] };
+                    4'b1010   : data  = { 31'b0, sw[1] };
+                    4'b1011   : data  = { 31'b0, sw[2] };
+                    4'b1100   : data  = { 31'b0, sw[3] };
                     default   : data = 0;
                 endcase
             end
