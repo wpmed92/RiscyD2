@@ -1,6 +1,4 @@
 `timescale 1ns/1ps
-`include "uart_rx.v"
-`include "uart_tx.v"
 
 module test_uart;
     reg clk = 0;

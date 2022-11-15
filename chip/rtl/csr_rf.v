@@ -1,6 +1,8 @@
+`include "constant_defs.v"
+
 module csr_rf(
     input clk,
-    input [1:0] state,
+    input [2:0] state,
     input en_csr,
     input [11:0] csr_adr,
     output [31:0] csr_val
@@ -9,7 +11,7 @@ module csr_rf(
     reg [31:0] _csr_val;
     
     always @(posedge clk) begin
-        if (state == 3'd1) begin
+        if (state == `REG_FILE_READ) begin
             cycle_counter <= cycle_counter + 1;
 
             if (en_csr) begin

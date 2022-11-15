@@ -1,3 +1,6 @@
+`include "riscv_defs.v"
+`include "extension_defs.v"
+
 module cpu(
         input CLK100MHZ, 
         output [3:0] led,
@@ -9,13 +12,14 @@ module cpu(
     reg read_en;
     wire [31:0] instr;
 
-    reg [1:0] state = 0;
+    reg [2:0] state = 0;
 
     // clk will increase state
     // 0 = fetch, decode
-    // 1 = rf, csr_rf read; execute (alu)
-    // 2 = mem/gpio access
-    // 3 = writeback
+    // 1 = rf, csr_rf read
+    // 2 = execute (alu)
+    // 3 = mem/gpio access
+    // 4 = writeback
 
     // Decode
     wire [4:0] rs1;
@@ -65,6 +69,7 @@ module cpu(
     wire is_lui;
 
     //RV32M
+`ifdef M_EXTENSION
     wire is_mul;
     wire is_mulh;
     wire is_mulhsu;
@@ -73,6 +78,7 @@ module cpu(
     wire is_divu;
     wire is_rem;
     wire is_remu;
+`endif
 
     // Load/store
     wire is_load;
@@ -147,6 +153,7 @@ module cpu(
         is_sra,
         is_or,
         is_and,
+    `ifdef M_EXTENSION
         is_mul,
         is_mulh,
         is_mulhsu,
@@ -155,6 +162,7 @@ module cpu(
         is_divu,
         is_rem,
         is_remu,
+    `endif
         is_auipc,
         is_lui,
         is_beq,
@@ -195,6 +203,8 @@ module cpu(
     );
 
     alu calc(
+        CLK100MHZ,
+        state,
         rs1_val,
         rs2_val,
         imm,
@@ -218,6 +228,7 @@ module cpu(
         is_sra,
         is_or,
         is_and,
+    `ifdef M_EXTENSION
         is_mul,
         is_mulh,
         is_mulhsu,
@@ -226,6 +237,7 @@ module cpu(
         is_divu,
         is_rem,
         is_remu,
+    `endif
         is_auipc,
         is_lui,
         is_load,
@@ -262,6 +274,8 @@ module cpu(
     );
 
     branch b(
+        CLK100MHZ,
+        state,
         rs1_val,
         rs2_val,
         is_beq,
@@ -276,11 +290,11 @@ module cpu(
     );
 
     always @ (posedge CLK100MHZ) begin
-        if (state == 3'd3) begin
+        if (state == 3'd4) begin
             pc <= taken_branch ? address : (pc + 4);
         end
 
-        state <= state + 1;
+        state <= (state + 1) % 5;
     end
 
 endmodule

@@ -1,4 +1,6 @@
 `include "riscv_defs.v"
+`include "extension_defs.v"
+`include "constant_defs.v"
 
 module decode(
     input [31:0] instr, 
@@ -44,6 +46,7 @@ module decode(
     output is_sra,
     output is_or,
     output is_and,
+`ifdef M_EXTENSION
     output is_mul,
     output is_mulh,
     output is_mulhsu,
@@ -52,6 +55,7 @@ module decode(
     output is_divu,
     output is_rem,
     output is_remu,
+`endif
     output is_auipc,
     output is_lui,
     output is_beq,
@@ -127,7 +131,7 @@ module decode(
     assign is_or   = (instr & `INST_OR_MASK)   == `INST_OR;
     assign is_and  = (instr & `INST_AND_MASK)  == `INST_AND;
 
-    //RV32M
+`ifdef M_EXTENSION
     assign is_mul    = (instr & `INST_MUL_MASK)    == `INST_MUL;
     assign is_mulh   = (instr & `INST_MULH_MASK)   == `INST_MULH;
     assign is_mulhsu = (instr & `INST_MULHSU_MASK) == `INST_MULHSU;
@@ -136,6 +140,7 @@ module decode(
     assign is_divu   = (instr & `INST_DIVU_MASK)   == `INST_DIVU;
     assign is_rem    = (instr & `INST_REM_MASK)    == `INST_REM;
     assign is_remu   = (instr & `INST_REMU_MASK)   == `INST_REMU;
+`endif
 
     // Branch
     assign is_beq  = (instr & `INST_BEQ_MASK)  == `INST_BEQ;

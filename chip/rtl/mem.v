@@ -1,6 +1,8 @@
+`include "constant_defs.v"
+
 module mem(
     input clk,
-    input [1:0] state,
+    input [2:0] state,
     input enabled,
     input load_enable,
     input store_enable,
@@ -29,9 +31,9 @@ module mem(
     end
 
     always @(posedge clk) begin
-        if (state == 3'd0) begin
+        if (state == `FETCH_DECODE) begin
             _instr_out = mem[pc[31:2]];
-        end else if (state == 3'd2 && enabled) begin
+        end else if (state == `LOAD_STORE && enabled) begin
             if (load_enable) begin
                 if (is_lb) begin
                     byte = mem[address[31:2]][{address[1:0], 3'b0} +: 8];
