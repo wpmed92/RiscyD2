@@ -1,3 +1,5 @@
+`include "riscv_defs.v"
+
 module cpu(
         input CLK100MHZ, 
         output [3:0] led,
@@ -66,6 +68,7 @@ module cpu(
     wire is_lui;
 
     //RV32M
+`ifdef M_EXTENSION
     wire is_mul;
     wire is_mulh;
     wire is_mulhsu;
@@ -74,6 +77,7 @@ module cpu(
     wire is_divu;
     wire is_rem;
     wire is_remu;
+`endif
 
     // Load/store
     wire is_load;
@@ -148,6 +152,7 @@ module cpu(
         is_sra,
         is_or,
         is_and,
+    `ifdef M_EXTENSION
         is_mul,
         is_mulh,
         is_mulhsu,
@@ -156,6 +161,7 @@ module cpu(
         is_divu,
         is_rem,
         is_remu,
+    `endif
         is_auipc,
         is_lui,
         is_beq,
@@ -221,6 +227,7 @@ module cpu(
         is_sra,
         is_or,
         is_and,
+    `ifdef M_EXTENSION
         is_mul,
         is_mulh,
         is_mulhsu,
@@ -229,6 +236,7 @@ module cpu(
         is_divu,
         is_rem,
         is_remu,
+    `endif
         is_auipc,
         is_lui,
         is_load,

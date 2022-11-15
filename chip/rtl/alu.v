@@ -1,3 +1,5 @@
+`include "riscv_defs.v"
+
 module alu(
     input clk,
     input [2:0] state,
@@ -24,6 +26,7 @@ module alu(
     input is_sra,
     input is_or,
     input is_and,
+`ifdef M_EXTENSION
     input is_mul,
     input is_mulh,
     input is_mulhsu,
@@ -32,6 +35,7 @@ module alu(
     input is_divu,
     input is_rem,
     input is_remu,
+`endif
     input is_auipc,
     input is_lui,
     input is_load,
@@ -114,7 +118,40 @@ module alu(
                 _result = imm;
             end else if (is_load || is_store) begin
                 _address = rs1_val + imm;
-            //place lower bits
+        `ifdef M_EXTENSION
+            ///place lower bits
+            end else if (is_mul) begin
+                muldiv_res = rs1_val * rs2_val;
+                _result = muldiv_res[31:0];
+            //place higher bits: signed x signed
+            end else if (is_mulh) begin
+                muldiv_res = { {32{rs1_val[31]}}, rs1_val } * {{32{rs2_val[31]}}, rs2_val };
+                _result = muldiv_res[63:32];
+            //place higher bits: signed x unsigned
+            end else if (is_mulhsu) begin
+                muldiv_res = { {32{rs1_val[31]}}, rs1_val } * { 32'b0, rs2_val };
+                _result = muldiv_res[63:32];
+            //place higher bits: unsigned x unsigned
+            end else if (is_mulhu) begin
+                muldiv_res = {32'b0, rs1_val } * { 32'b0, rs2_val };
+                _result = muldiv_res[63:32];
+            end else if (is_div) begin
+                abs_divisor = (rs2_val[31]) ? -rs2_val : rs2_val;
+                abs_dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
+                u_result = abs_dividend / abs_divisor;
+                
+                _result = (rs1_val[31] ^ rs2_val[31]) ? -u_result : u_result;
+            end else if (is_divu) begin
+                _result = rs1_val / rs2_val;
+            end else if (is_rem) begin
+                abs_divisor = (rs2_val[31]) ? -rs2_val : rs2_val;
+                abs_dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
+                u_result = abs_dividend % abs_divisor;
+                
+                _result = (rs1_val[31] ^ rs2_val[31]) ? -u_result : u_result;
+            end else if (is_remu) begin
+                _result = rs1_val % rs2_val;
+        `endif
             end else begin
                 _result = 0;
                 _address = 0;
