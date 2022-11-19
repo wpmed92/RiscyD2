@@ -1,8 +1,5 @@
-`include "constant_defs.v"
-
 module gpio(
     input clk,
-    input [2:0] state,
     input enabled,
     input load_enable,
     input store_enable,
@@ -56,7 +53,7 @@ module gpio(
      * 0x32009-0x3200C:  sw[0:3]                R        
      */
     always @(posedge clk) begin
-        if (state == `LOAD_STORE && enabled) begin
+        if (enabled) begin
             if (store_enable) begin
                 case (address)
                     4'b0000   : led[0]   = data_in > 0;
