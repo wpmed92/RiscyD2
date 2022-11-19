@@ -18,7 +18,7 @@ class Assembler:
     num_line = 0
 
     for asm_line in asm_lines:
-      tokenizer = Tokenizer(asm_line, num_line)
+      tokenizer = Tokenizer(asm_line, num_line + 1)
       self.token_stream.extend(tokenizer.tokenize())
       num_line = num_line + 1
 
