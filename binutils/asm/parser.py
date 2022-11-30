@@ -142,6 +142,9 @@ class Parser:
   def expand_jal(self, stmt):
     return OpStatement(name="jal", rd=1, imm=stmt.imm)
 
+  def raise_error(self, error_msg):
+    raise Exception(f'{error_msg} at line {self.cur_token().pos[0]}, col {self.cur_token().pos[1]}')
+
   def parse_op_statement(self):
     if self.cur_token().token_type != TokenType.OP_KEYWORD:
       return None
@@ -194,19 +197,19 @@ class Parser:
 
     #parse source register, rs1
     if self.peek_token().token_type != TokenType.COMMA:
-      raise Exception("Expected a comma")
+      self.raise_error("Expected a comma")
 
     self.advance_token()
     
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
     stmt.rs1 = self.cur_token().val
 
     if self.peek_token().token_type != TokenType.COMMA:
-      raise Exception("Expected a comma")
+      self.raise_error("Expected a comma")
 
     self.advance_token()
 
@@ -215,13 +218,13 @@ class Parser:
         self.advance_token()
         stmt.imm = self.cur_token().val
       else:
-        raise Exception("Expected a number")
+        self.raise_error("Expected a number")
     else:
       if self.peek_token().token_type == TokenType.REGISTER_INDEX:
         self.advance_token()
         stmt.rs2 = self.cur_token().val
       else:
-        raise Exception(f'Expected a register identifier pos: {self.cur_token().pos}')
+        self.raise_error("Expected a register identifier")
 
     return stmt
 
@@ -230,7 +233,7 @@ class Parser:
   def parse_load_store_jalr(self, stmt, is_load_or_jalr):
     #parse destination register, rd
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
@@ -241,12 +244,12 @@ class Parser:
 
     #parse offset, immediate
     if self.peek_token().token_type != TokenType.COMMA:
-      raise Exception("Expected a comma")
+      self.raise_error("Expected a comma")
 
     self.advance_token()
     
     if self.peek_token().token_type != TokenType.NUMBER:
-      raise Exception("Expected a number")
+      self.raise_error("Expected a number")
 
     self.advance_token()
 
@@ -254,19 +257,19 @@ class Parser:
 
     #parse base, rs1
     if self.peek_token().token_type != TokenType.OPEN_PARENTH:
-      raise Exception("Expected a '(', got: " + str(self.peek_token().val))
+      self.raise_error("Expected a '('")
 
     self.advance_token()
 
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
     stmt.rs1 = self.cur_token().val
 
     if self.peek_token().token_type != TokenType.CLOSED_PARENTH:
-      raise Exception("Expected a ')'")
+      self.raise_error("Expected a ')'")
 
     self.advance_token()
 
@@ -276,7 +279,7 @@ class Parser:
   def parse_branch(self, stmt):
     #parse source register, rs1
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
@@ -284,19 +287,19 @@ class Parser:
 
     #parse source register, rs2
     if self.peek_token().token_type != TokenType.COMMA:
-      raise Exception("Expected a comma")
+      self.raise_error("Expected a comma")
 
     self.advance_token()
     
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
     stmt.rs2 = self.cur_token().val
 
     if self.peek_token().token_type != TokenType.COMMA:
-      raise Exception("Expected a comma")
+      self.raise_error("Expected a comma")
 
     self.advance_token()
 
@@ -307,20 +310,20 @@ class Parser:
       self.advance_token()
       stmt.imm = self.cur_token().tok_str
     else:
-      raise Exception("Expected a number")
+      self.raise_error("Expected a number")
     
     return stmt
 
   def parse_r_i(self, stmt):
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
     stmt.rd = self.cur_token().val
 
     if self.peek_token().token_type != TokenType.COMMA:
-      raise Exception("Expected a comma")
+      self.raise_error("Expected a comma")
 
     self.advance_token()
 
@@ -335,25 +338,25 @@ class Parser:
       stmt.has_offset = True
       stmt.imm = self.cur_token().tok_str
     else:
-      raise Exception("Expected a number or an identifier")
+      self.raise_error("Expected a number or an identifier")
 
     return stmt
 
   def parse_u_type(self, stmt):
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
     stmt.rd = self.cur_token().val
 
     if self.peek_token().token_type != TokenType.COMMA:
-      raise Exception("Expected a comma")
+      self.raise_error("Expected a comma")
 
     self.advance_token()
 
     if self.peek_token().token_type != TokenType.NUMBER:
-      raise Exception("Expected a number")
+      self.raise_error("Expected a number")
 
     self.advance_token()
 
@@ -363,19 +366,19 @@ class Parser:
 
   def parse_r_r(self, stmt):
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
     stmt.rd = self.cur_token().val
 
     if self.peek_token().token_type != TokenType.COMMA:
-      raise Exception("Expected a comma")
+      self.raise_error("Expected a comma")
 
     self.advance_token()
 
     if self.peek_token().token_type != TokenType.REGISTER_INDEX:
-      raise Exception("Expected a register identifier")
+      self.raise_error("Expected a register identifier")
 
     self.advance_token()
 
