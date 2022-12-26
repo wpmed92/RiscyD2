@@ -10,3 +10,4 @@ lbu x6, 0(x4)
 lh x7, 2(x4)
 lhu x8, 2(x4)
 lw x9, 4(x4)
+jal x0, 0
