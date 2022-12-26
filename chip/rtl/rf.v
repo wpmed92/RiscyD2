@@ -38,8 +38,7 @@ module rf(
             registers[rd] = is_load ? load_result : 
                             is_csr  ? csr_val :
                             alu_result;
-
-        `ifdef ISA_TEST
+       `ifdef ISA_TEST
             for (i = 0; i < 32; i = i + 1)
                $display("%d:%h", i, registers[i]);
         `endif

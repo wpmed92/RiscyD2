@@ -13,7 +13,7 @@ module csr_rf(
     always @(posedge clk) begin
         if (state == `REG_FILE_READ) begin
             cycle_counter <= cycle_counter + 1;
-
+            
             if (en_csr) begin
                 case (csr_adr)
                     12'hc00 : _csr_val = cycle_counter[31:0];

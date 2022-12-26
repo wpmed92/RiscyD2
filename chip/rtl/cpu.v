@@ -1,5 +1,7 @@
 `include "riscv_defs.v"
 `include "extension_defs.v"
+`include "constant_defs.v"
+
 
 module cpu(
         input CLK100MHZ, 
@@ -103,6 +105,9 @@ module cpu(
     // Jump
     wire is_jal;
     wire is_jalr;
+
+    // stall
+    wire should_stall;
 
     // CSRRS
     wire is_csrrs;
@@ -246,7 +251,8 @@ module cpu(
         is_jal,
         is_jalr,
         alu_result,
-        address
+        address,
+        should_stall
     );
 
     mmio mmio_instance(
@@ -290,11 +296,15 @@ module cpu(
     );
 
     always @ (posedge CLK100MHZ) begin
+        if (should_stall) begin
+            state <= `EXECUTE;
+        end else begin
+            state <= (state + 1) % 5;
+        end
+
         if (state == 3'd4) begin
             pc <= taken_branch ? address : (pc + 4);
         end
-
-        state <= (state + 1) % 5;
     end
 
 endmodule

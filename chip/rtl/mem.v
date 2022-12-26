@@ -1,65 +1,61 @@
-`include "constant_defs.v"
+//True Dual Port with Byte-Wide Write Enable
 
-module mem(
-    input clk,
-    input [2:0] state,
-    input enabled,
-    input load_enable,
-    input store_enable,
-    input is_lb,
-    input is_lbu,
-    input is_lh,
-    input is_lhu,
-    input is_lw,
-    input is_sb,
-    input is_sh,
-    input is_sw,
-    input [31:0] pc, 
-    input [31:0] address,
-    input [31:0] data_in,
-    output [31:0] data_out,
-    output [31:0] instr_out
+module mem
+#(
+    //--------------------------------------------------------------------------
+    parameter   NUM_COL             =   4,
+    parameter   COL_WIDTH           =   8,
+    parameter   ADDR_WIDTH          =  10,
+    // Addr  Width in bits : 2 *ADDR_WIDTH = RAM Depth
+    parameter   DATA_WIDTH      =  NUM_COL*COL_WIDTH  // Data  Width in bits
+    //----------------------------------------------------------------------
+) (
+    input clkA,
+    input enaA,
+    input [NUM_COL-1:0] weA,
+    input [ADDR_WIDTH-1:0] addrA,
+    input [DATA_WIDTH-1:0] dinA,
+    output reg [DATA_WIDTH-1:0] doutA,
+    input clkB,
+    input enaB,
+    input [NUM_COL-1:0] weB,
+    input [ADDR_WIDTH-1:0] addrB,
+    input [DATA_WIDTH-1:0] dinB,
+    output reg [DATA_WIDTH-1:0] doutB
 );
-    reg [31:0] mem [0:'h2403];
-    reg [31:0] data;
-    reg [31:0] _instr_out;
-    reg [7:0] byte;
-    reg [15:0] hword;
 
-    initial begin
-        $readmemh("code.mem", mem);
-    end
+// Core Memory
+reg [DATA_WIDTH-1:0]   ram_block [0:(2**ADDR_WIDTH)-1];
+integer                i;
 
-    always @(posedge clk) begin
-        if (state == `FETCH_DECODE) begin
-            _instr_out = mem[pc[31:2]];
-        end else if (state == `LOAD_STORE && enabled) begin
-            if (load_enable) begin
-                if (is_lb) begin
-                    byte = mem[address[31:2]][{address[1:0], 3'b0} +: 8];
-                    data <= { {24{byte[7]}}, byte };
-                end else if (is_lh) begin
-                    hword = mem[address[31:2]][{address[1], 4'b0} +: 16];
-                    data <= { {16{hword[15]}}, hword };
-                end else if (is_lbu) begin
-                    data <= { 24'b0, mem[address[31:2]][{address[1:0], 3'b0} +: 8] };
-                end else if (is_lhu) begin
-                    data <= { 16'b0, mem[address[31:2]][{address[1], 4'b0} +: 16] };
-                end else begin
-                    data <= mem[address[31:2]];
-                end
-            end else if (store_enable) begin
-                if (is_sb) begin
-                    mem[address[31:2]][{address[1:0], 3'b0} +: 8] <= data_in[7:0];
-                end else if (is_sh) begin
-                    mem[address[31:2]][{address[1], 4'b0} +: 16] <= data_in[15:0];
-                end else begin
-                    mem[address[31:2]] <= data_in;
-                end
+initial begin
+    $readmemh("code.mem", ram_block);
+end
+
+// Port-A Operation
+always @ (posedge clkA) begin
+    if(enaA) begin
+        for(i=0;i<NUM_COL;i=i+1) begin
+            if(weA[i]) begin
+                ram_block[addrA][i*COL_WIDTH +: COL_WIDTH] <= dinA[i*COL_WIDTH +: COL_WIDTH];
             end
         end
-    end
 
-    assign data_out = data;
-    assign instr_out = _instr_out;
+        doutA <= ram_block[addrA];
+    end
+end
+
+// Port-B Operation:
+always @ (posedge clkB) begin
+    if(enaB) begin
+        for(i=0;i<NUM_COL;i=i+1) begin
+            if(weB[i]) begin
+                ram_block[addrB][i*COL_WIDTH +: COL_WIDTH] <= dinB[i*COL_WIDTH +: COL_WIDTH];
+            end
+        end
+
+        doutB <= ram_block[addrB];
+    end
+end
+
 endmodule
