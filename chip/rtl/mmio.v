@@ -32,9 +32,13 @@ module mmio(
     // 4'bxxxx -> x should be 1 for the bytes we want to write, and 0 otherwise
     // the position of the byte is determined by address bits 1:0 for bytes (values: 0-3), 
     // and bit 1 for half words (values: 0, 2)
-    wire [3:0] weB_calc = is_sb  ? 4'b1    << address[1:0]        :
-                          is_sh  ? 4'b0011 << {address[1], 1'b0}  :
-                          is_sw  ? 4'b1111                        :
+    wire [3:0] weB_calc = is_sb && address[1:0] == 0 ? 4'b0001 :
+                          is_sb && address[1:0] == 1 ? 4'b0010 :
+                          is_sb && address[1:0] == 2 ? 4'b0100 :
+                          is_sb && address[1:0] == 3 ? 4'b1000 :
+                          is_sh && address[1] == 0   ? 4'b0011 :
+                          is_sh && address[1] == 1   ? 4'b1100 :
+                          is_sw                      ? 4'b1111 :
                           4'b0;
     
     // Dual-port RAM template expacts bytes and half-words in the same position as where we write them
