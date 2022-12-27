@@ -72,7 +72,7 @@ module alu(
             // a single 100MHz clock cycle, we wait for them for 
             // some number of cycles determined based 
             // on timing analysis reports.
-            if (wait_mul == 2 || wait_div == 10) begin
+            if (wait_mul == `WAIT_MUL_CYCLES || wait_div == `WAIT_DIV_CYCLES) begin
                 wait_mul = 0;
                 wait_div = 0;
                 _should_stall = 0;

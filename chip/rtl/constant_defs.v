@@ -6,3 +6,5 @@
 `define EXECUTE       3'd2
 `define LOAD_STORE    3'd3
 `define WRITE_BACK    3'd4
+`define WAIT_MUL_CYCLES 2
+`define WAIT_DIV_CYCLES 10
