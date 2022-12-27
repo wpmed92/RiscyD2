@@ -1,4 +1,5 @@
 //True Dual Port with Byte-Wide Write Enable
+`include "constant_defs.v"
 
 module mem
 #(
@@ -11,6 +12,7 @@ module mem
     //----------------------------------------------------------------------
 ) (
     input clkA,
+    input [2:0]state,
     input enaA,
     input [NUM_COL-1:0] weA,
     input [ADDR_WIDTH-1:0] addrA,
@@ -32,9 +34,9 @@ initial begin
     $readmemh("code.mem", ram_block);
 end
 
-// Port-A Operation
+// Port-A Operation (instructions)
 always @ (posedge clkA) begin
-    if(enaA) begin
+    if(enaA && state == `FETCH_DECODE) begin
         for(i=0;i<NUM_COL;i=i+1) begin
             if(weA[i]) begin
                 ram_block[addrA][i*COL_WIDTH +: COL_WIDTH] <= dinA[i*COL_WIDTH +: COL_WIDTH];
@@ -45,9 +47,9 @@ always @ (posedge clkA) begin
     end
 end
 
-// Port-B Operation:
+// Port-B Operation (memory):
 always @ (posedge clkB) begin
-    if(enaB) begin
+    if(enaB && state == `LOAD_STORE) begin
         for(i=0;i<NUM_COL;i=i+1) begin
             if(weB[i]) begin
                 ram_block[addrB][i*COL_WIDTH +: COL_WIDTH] <= dinB[i*COL_WIDTH +: COL_WIDTH];
