@@ -66,15 +66,16 @@ module alu(
     reg _should_stall = 0;
 
     always @(posedge clk) begin
-        if (state == `EXECUTE) begin
+        if (state == `WRITE_BACK) begin
+            wait_mul <= 0;
+            wait_div <= 0;
+        end else if (state == `EXECUTE) begin
 
             // Since mul and div instructions don't finish in 
             // a single 100MHz clock cycle, we wait for them for 
             // some number of cycles determined based 
             // on timing analysis reports.
-            if (wait_mul == 2 || wait_div == 10) begin
-                wait_mul = 0;
-                wait_div = 0;
+            if (wait_mul == `WAIT_MUL_CYCLES || wait_div == `WAIT_DIV_CYCLES) begin
                 _should_stall = 0;
             end else if (wait_mul > 0) begin
                 wait_mul = wait_mul + 1;
