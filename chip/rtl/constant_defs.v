@@ -7,4 +7,3 @@
 `define LOAD_STORE      3'd3
 `define WRITE_BACK      3'd4
 `define WAIT_MUL_CYCLES 1
-`define WAIT_DIV_CYCLES 9
