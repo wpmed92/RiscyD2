@@ -18,6 +18,12 @@ def get_expected_regs(regs_path):
 
         return out
 
+tests = [
+    "loadstore.asm",
+    "rv32i.asm",
+    "rv32m.asm",
+    "csr.asm"
+]
 def run_test(test_case):
     compile_command = f'python3 ../binutils/asm/asm.py -i {test_case["asm"]} -o code.o'
     run_command =  "cd ../chip/rtl;"
@@ -41,7 +47,7 @@ def run_test(test_case):
 
     print(f'{test_case["asm"]} PASSED')
 
-for test_asm in glob.glob("*.asm"):
+for test_asm in tests:
     run_test({ 
         "asm": test_asm, 
         "regs": get_expected_regs(os.path.splitext(test_asm)[0] + ".regs")

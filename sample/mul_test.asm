@@ -1,6 +1,6 @@
 li x1, 0x32000 ;led base
-li x2, 101
-li x3, 100
+li x2, 10
+li x3, 2
 mul x4, x2, x3
 andi x5, x4, 1
 sb x5, 0(x1)
