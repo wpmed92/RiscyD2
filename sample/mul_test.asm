@@ -14,4 +14,3 @@ srli x5, x4, 3
 andi x5, x5, 1
 sb x5, 3(x1)
 jal x0, 0
-

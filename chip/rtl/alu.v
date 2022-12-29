@@ -55,32 +55,46 @@ module alu(
     reg [63:0] sra;
 
     //muldiv
-    reg [63:0] muldiv_res;
-    reg [31:0] abs_divisor;
-    reg [31:0] abs_dividend;
-    reg [31:0] u_result;
+    reg [63:0] mul_res;
+    reg [31:0] divisor;
+    reg [31:0] dividend;
+
+    reg div_start = 0;       // start signal
+    wire div_busy;           // calculation in progress
+    wire div_valid;          // quotient and remainder are valid
+    wire div_dbz;            // divide by zero flag
+    wire [31:0] quotient;    // quotient
+    wire [31:0] remainder;   // remainder
+
+    divider div_int_inst(
+        .clk(clk),
+        .start(div_start),
+        .busy(div_busy),
+        .x(dividend),
+        .y(divisor),
+        .q(quotient),
+        .r(remainder),
+        .valid(div_valid)
+    );
 
     //wait for muldiv
     reg [1:0] wait_mul = 0; 
-    reg [3:0] wait_div = 0;
     reg _should_stall = 0;
 
     always @(posedge clk) begin
         if (state == `WRITE_BACK) begin
             wait_mul <= 0;
-            wait_div <= 0;
+            div_start <= 0;
         end else if (state == `EXECUTE) begin
 
             // Since mul and div instructions don't finish in 
             // a single 100MHz clock cycle, we wait for them for 
             // some number of cycles determined based 
             // on timing analysis reports.
-            if (wait_mul == `WAIT_MUL_CYCLES || wait_div == `WAIT_DIV_CYCLES) begin
+            if (wait_mul == `WAIT_MUL_CYCLES) begin
                 _should_stall = 0;
             end else if (wait_mul > 0) begin
                 wait_mul = wait_mul + 1;
-            end else if (wait_div > 0) begin
-                wait_div = wait_div + 1;
             end else if (is_addi) begin
                 _result = rs1_val + imm;
             end else if (is_xori) begin
@@ -145,55 +159,58 @@ module alu(
             // ---------------------
             //place lower bits
             end else if (is_mul && wait_mul == 0) begin
-                muldiv_res = rs1_val * rs2_val;
-                _result = muldiv_res[31:0];
+                mul_res = rs1_val * rs2_val;
+                _result = mul_res[31:0];
                 wait_mul = wait_mul + 1;
                 _should_stall = 1;
             //place higher bits: signed x signed
             end else if (is_mulh && wait_mul == 0) begin
-                muldiv_res = { {32{rs1_val[31]}}, rs1_val } * {{32{rs2_val[31]}}, rs2_val };
-                _result = muldiv_res[63:32];
+                mul_res = { {32{rs1_val[31]}}, rs1_val } * {{32{rs2_val[31]}}, rs2_val };
+                _result = mul_res[63:32];
                 wait_mul = wait_mul + 1;
                 _should_stall = 1;
             //place higher bits: signed x unsigned
             end else if (is_mulhsu && wait_mul == 0) begin
-                muldiv_res = { {32{rs1_val[31]}}, rs1_val } * { 32'b0, rs2_val };
-                _result = muldiv_res[63:32];
+                mul_res = { {32{rs1_val[31]}}, rs1_val } * { 32'b0, rs2_val };
+                _result = mul_res[63:32];
                 wait_mul = wait_mul + 1;
                 _should_stall = 1;
             //place higher bits: unsigned x unsigned
             end else if (is_mulhu && wait_mul == 0) begin
-                muldiv_res = {32'b0, rs1_val } * { 32'b0, rs2_val };
-                _result = muldiv_res[63:32];
+                mul_res = {32'b0, rs1_val } * { 32'b0, rs2_val };
+                _result = mul_res[63:32];
                 wait_mul = wait_mul + 1;
                 _should_stall = 1;
             // ---------------------
             // DIV
             // ---------------------
-            end else if (is_div && wait_div == 0) begin
-                abs_divisor = (rs2_val[31]) ? -rs2_val : rs2_val;
-                abs_dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
-                u_result = abs_dividend / abs_divisor;
-                
-                _result = (rs1_val[31] ^ rs2_val[31]) ? -u_result : u_result;
-                wait_div = wait_div + 1;
-                _should_stall = 1;
-            end else if (is_divu && wait_div == 0) begin
-                _result = rs1_val / rs2_val;
-                wait_div = wait_div + 1;
-                _should_stall = 1;
-            end else if (is_rem && wait_div == 0) begin
-                abs_divisor = (rs2_val[31]) ? -rs2_val : rs2_val;
-                abs_dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
-                u_result = abs_dividend % abs_divisor;
-                
-                _result = (rs1_val[31] ^ rs2_val[31]) ? -u_result : u_result;
-                wait_div = wait_div + 1;
-                _should_stall = 1;
-            end else if (is_remu && wait_div == 0) begin
-                _result = rs1_val % rs2_val;
-                wait_div = wait_div + 1;
-                _should_stall = 1;
+            end else if (is_div || is_divu || is_rem || is_remu) begin
+                if (is_div || is_rem) begin
+                    dividend = (rs1_val[31]) ? -rs1_val : rs1_val;
+                    divisor  = (rs2_val[31]) ? -rs2_val : rs2_val;
+                end else begin
+                    dividend = rs1_val;
+                    divisor = rs2_val;
+                end
+
+                if (!div_start) begin
+                    div_start = 1;
+                    _should_stall = 1;
+                end else if (div_busy) begin
+                    div_start = 0;
+                end else if (div_valid) begin
+                    if (is_div) begin
+                        _result = (rs1_val[31] ^ rs2_val[31]) ? -quotient : quotient;
+                    end else if (is_rem) begin
+                        _result = (rs1_val[31] ^ rs2_val[31]) ? -remainder : remainder;
+                    end else if (is_divu) begin
+                        _result = quotient;
+                    end else begin
+                        _result = remainder;
+                    end
+
+                    _should_stall = 0;
+                end
         `endif
             end
         end
