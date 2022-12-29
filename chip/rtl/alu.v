@@ -59,6 +59,7 @@ module alu(
     reg [31:0] divisor;
     reg [31:0] dividend;
 
+    reg div_triggered = 0;
     reg div_start = 0;       // start signal
     wire div_busy;           // calculation in progress
     wire div_valid;          // quotient and remainder are valid
@@ -83,8 +84,8 @@ module alu(
 
     always @(posedge clk) begin
         if (state == `WRITE_BACK) begin
-            wait_mul <= 0;
-            div_start <= 0;
+            wait_mul = 0;
+            div_triggered = 0;
         end else if (state == `EXECUTE) begin
 
             // Since mul and div instructions don't finish in 
@@ -192,11 +193,12 @@ module alu(
                     dividend = rs1_val;
                     divisor = rs2_val;
                 end
-
-                if (!div_start) begin
+            
+                if (!div_triggered) begin
                     div_start = 1;
+                    div_triggered = 1;
                     _should_stall = 1;
-                end else if (div_busy) begin
+                end else if (div_start) begin
                     div_start = 0;
                 end else if (div_valid) begin
                     if (is_div) begin

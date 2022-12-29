@@ -302,7 +302,7 @@ module cpu(
             state <= (state + 1) % 5;
         end
 
-        if (state == 3'd4) begin
+        if (state == `WRITE_BACK) begin
             pc <= taken_branch ? address : (pc + 4);
         end
     end
