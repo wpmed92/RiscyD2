@@ -11,8 +11,9 @@ module csr_rf(
     reg [31:0] _csr_val;
     
     always @(posedge clk) begin
+        cycle_counter <= cycle_counter + 1;
+        
         if (state == `REG_FILE_READ) begin
-            cycle_counter <= cycle_counter + 1;
             
             if (en_csr) begin
                 case (csr_adr)
