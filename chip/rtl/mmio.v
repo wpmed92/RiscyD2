@@ -23,7 +23,7 @@ module mmio(
     output uart_rxd_out,
     input [3:0] sw
 );
-    wire en_bram = (address >= 0) && (address < 'h8000);
+    wire en_bram = (address >= 0) && (address < 'h32000);
     wire en_gpio = (address >= 'h32000);
     wire [31:0] _bram_out;
     wire [31:0] _gpio_out;
@@ -72,14 +72,14 @@ module mmio(
         .clkA(clk),
         .enaA(1'd1),
         .weA(4'd0),
-        .addrA(pc[16:2]),
+        .addrA(pc[15:2]),
         .dinA(32'd0),
         .doutA(instr_out),
         //Port B is for memory
         .clkB(clk),
         .enaB(en_bram),
         .weB(weB_calc),
-        .addrB(address[16:2]),
+        .addrB(address[15:2]),
         .dinB(data_in_calc),
         .doutB(_bram_out)
     );
