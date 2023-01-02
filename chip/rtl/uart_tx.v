@@ -30,6 +30,10 @@ always @(posedge clk) begin
                 tx_counter <= 0;
                 _tx_ready <= 1;
             end
+        end else begin
+            _uart_rxd_out <= 1;
+            tx_counter <= 0;
+            _tx_ready <= 0;
         end
     end else begin
         uart_tick <= uart_tick + 1;
