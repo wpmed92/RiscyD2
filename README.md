@@ -1,12 +1,13 @@
-# Riscy-D2
+# RiscyD2
 
-Riscy-D2 is a project to build a RISC-V based computer. The goal is to run it on an FPGA. The CPU currently supports the RV32I ISA.
-This repository contains:
+RiscyD2 is a tiny RISC-V based microcontroller/softcore running on a Digilent Arty A7-35T board.
 
-- chip: RTL code for a RISC-V RV32I based non-pipelined single core CPU
-- binutils: An assembler that compiles an input assembly file, and emits a RISC-V flat binary and  a `.mem` file. Currently the CPU makes use of `.mem` files, whereas the emulator executes flat binaries.
-- emulation: A RISC-V RV32I emulator written in Python
-- test: Currently only contains an RV32I test adapted [from here](https://raw.githubusercontent.com/stevehoover/LF-Building-a-RISC-V-CPU-Core/main/lib/risc-v_shell_lib.tlv)
+## Project structure
+
+- chip: RTL code for a RISC-V CPU core implementing the RV32I base instruction set, with M standard extension support.
+- binutils: Contains an assembler that emits RISC-V flat binary.
+- emulation: A RISC-V RV32IM emulator written in Python.
+- test: Simple unit tests for arithemtic, load/store and csr instructions.
 
 The project is mainly educational, and is inspired by [From the Transistor to the Web Browser](https://github.com/geohot/fromthetransistor).
 
@@ -18,7 +19,7 @@ The project is mainly educational, and is inspired by [From the Transistor to th
 
 ## Running on an FPGA
 
-RiscyD2 currently only supports Arty A7 35T.
+RiscyD2 currently only supports Arty A7-35T, but the plan is to add support for more boards.
 
 To set it up:
 - Compile the `bootrom`: 
@@ -31,19 +32,41 @@ To set it up:
 - Add `code.mem` as a Memory file
 - Add constraints located under `chip/fpga/arty_a7/arty_a7_35t.xdc` as constraint file
 - Synthesize, implement and generate bitstream
-- Load the bitstream to board
+- Load the bitstream to the board
 
-At this point the chip is deployed to the board, and `bootrom` is running. It continously checks the UART port for incoming exe files.
+At this point the chip is deployed to the board, and the `bootrom` is running. It continously checks the UART port for incoming exe files.
 
-To send an exe:
+## Programming RiscyD2
 
-- Compile an example program located under `sample`:
+To compile programs for the board you can either use the assembler in the repository (recommended to run the programs in the `sample` folder), or use a real compiler, like [GCC](https://github.com/riscv-collab/riscv-gnu-toolchain).
+
+### Toy examples
+
+Compile an example program located under `sample`:
 
 `python3 binutils/asm/asm.py -i sample/switches.asm -o exe.o`
 
-- Send the exe through UART:
+### Real-world examples
+
+For a relatively complex example program, see the [porting](https://github.com/wpmed92/TinyMaix-RiscyD2) of [TinyMaix](https://github.com/sipeed/TinyMaix) to RiscyD2.
+
+To compile C programs, the following toolchain is recommended:
+
+- [GCC](https://github.com/riscv-collab/riscv-gnu-toolchain)
+- [Picolibc](https://github.com/picolibc/picolibc)
+- [riscyd2.h](lib/riscyd2.h)
+- [riscyd2.ld](lib/riscyd2.ld) (Picolibc linker script)
+
+
+Send the exe through UART:
 
 `python3 tools/talk2d2.py -i path/to/exe`
+
+The binary format is fairly simple: the first 4 bytes encode the size of the exe, followed by the exe. That's it.
+
+To listen to incoming data from the board, run:
+
+`python3 tools/listen2d2.py`
 
 (NOTE: to get the ID of your board run `ls /dev/tty.*` in your terminal.)
 
