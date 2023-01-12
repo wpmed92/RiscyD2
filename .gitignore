@@ -4,3 +4,4 @@ __pycache__
 *.mem
 *.chip
 *.vcd
+out
