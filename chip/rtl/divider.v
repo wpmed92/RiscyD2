@@ -1,15 +1,18 @@
 // Implements long division
 // source: https://projectf.io/posts/division-in-verilog/
 module divider(
-    input clk,
-    input start,          // start signal
-    output busy,      // calculation in progress
-    output valid,     // quotient and remainder are valid
-    output dbz,       // divide by zero flag
-    input  [31:0] x,      // dividend
-    input  [31:0] y,      // divisor
-    output reg [31:0] q,  // quotient
-    output reg [31:0] r   // remainder
+    // Inputs
+    input clk_i,
+    input start_i,          // start signal
+    output busy_i,      // calculation in progress
+    output valid_i,     // quotient and remainder are valid
+    output dbz_i,       // divide by zero flag
+    input  [31:0] x_i,      // dividend
+    input  [31:0] y_i,      // divisor
+
+    // Outputs
+    output reg [31:0] q_o,  // quotient
+    output reg [31:0] r_o   // remainder
 );
 
 reg [31:0] y1;              // copy of divisor

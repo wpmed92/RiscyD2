@@ -1,24 +1,27 @@
 module uart_rx(
-    input clk,
-    input uart_txd_in,
-    output [7:0] byte,
-    output byte_read
+    // Inputs
+    input clk_i,
+    input uart_txd_i,
+
+    // Outputs
+    output [7:0] byte_o,
+    output byte_ready_o
 );
 
-reg [4:0] counter = 0;
-reg [1:0] state = 0; //idle, reading, finished
+reg [ 4:0] counter = 0;
+reg [ 1:0] state = 0; //idle, reading, finished
 reg [10:0] uart_tick = 0;
-reg [7:0] _byte = 0;
+reg [ 7:0] _byte = 0;
 reg _byte_read = 0;
-reg [3:0] bit_counter = 0;
+reg [ 3:0] bit_counter = 0;
 
 //9600 baud rate
 //sample 16 times 9600 -> 153600 -> 100MHz clock -> 651 clock tick produces 1 uart sample tick
-always @(posedge clk) begin
+always @(posedge clk_i) begin
     if (uart_tick == 651) begin
         uart_tick <= 0;
 
-        if (uart_txd_in == 0 && state == 2'b00) begin
+        if (uart_txd_i == 0 && state == 2'b00) begin
             if (counter == 7) begin
                 _byte_read <= 0;
                 _byte <= 0;
@@ -32,7 +35,7 @@ always @(posedge clk) begin
                 bit_counter <= 0;
                 state <= 2'b10;
             end else if (counter == 15) begin
-                _byte <= _byte | (uart_txd_in << bit_counter);
+                _byte <= _byte | (uart_txd_i << bit_counter);
                 counter <= 0;
                 bit_counter <= bit_counter + 1;
             end else begin
@@ -40,7 +43,7 @@ always @(posedge clk) begin
             end
         end else if (state == 2'b10) begin
             if (counter == 15) begin
-                if (uart_txd_in == 1) begin
+                if (uart_txd_i == 1) begin
                     _byte_read <= 1;
                     counter <= 0;
                     state <= 2'b00; //idle
@@ -57,7 +60,7 @@ always @(posedge clk) begin
     end
 end
 
-assign byte = _byte;
-assign byte_read = _byte_read;
+assign byte_o = _byte;
+assign byte_ready_o = _byte_read;
 
 endmodule

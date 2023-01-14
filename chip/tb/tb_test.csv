@@ -1,0 +1,3 @@
+ALU, wb_val, 2, 2, addr_val, 10, 10, taken_branch, 1, 1
+AUIPC, wb_val, 2, 2, addr_val, 10, 10, taken_branch, 1, 0
+LUI, wb_val, 2, 2, addr_val, 10, 10, taken_branch, 1, 1
