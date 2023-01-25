@@ -10,22 +10,22 @@ module csr_rf(
     // Outputs
     output [31:0] csr_val_o
 );
-    reg [63:0] cycle_counter = 0; 
-    reg [31:0] _csr_val;
+    reg [63:0] cycle_counter_r = 0; 
+    reg [31:0] csr_val_r;
     
     always @(posedge clk_i) begin
-        cycle_counter <= cycle_counter + 1;
+        cycle_counter_r <= cycle_counter_r + 1;
         
         if (state_i == `REG_FILE_READ) begin
             if (en_csr_i) begin
                 case (csr_adr_i)
-                    12'hc00 : _csr_val = cycle_counter[31:0];
-                    12'hc80 : _csr_val = cycle_counter[63:32];
-                    default : _csr_val = 32'd0;
+                    12'hc00 : csr_val_r = cycle_counter_r[31:0];
+                    12'hc80 : csr_val_r = cycle_counter_r[63:32];
+                    default : csr_val_r = 32'd0;
                 endcase
             end
         end
     end
 
-    assign csr_val_o = _csr_val;
+    assign csr_val_o = csr_val_r;
 endmodule

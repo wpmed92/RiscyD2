@@ -10,7 +10,7 @@ module alu(
     output reg [31:0] alu_result_o
 );
 
-reg [63:0] alu_temp_result;
+reg [63:0] alu_temp_result_r;
 
 always@* begin
     case(alu_opcode_i)
@@ -22,8 +22,8 @@ always@* begin
         `ALU_OP_SLL  : alu_result_o = op_1_i << op_2_i;
         `ALU_OP_SRL  : alu_result_o = op_1_i >> op_2_i;
         `ALU_OP_SRA  : begin
-            alu_temp_result = { {32{op_1_i[31]}}, op_1_i } >> op_2_i;
-            alu_result_o    = alu_temp_result[31:0];
+            alu_temp_result_r = { {32{op_1_i[31]}}, op_1_i } >> op_2_i;
+            alu_result_o    = alu_temp_result_r[31:0];
         end
         `ALU_OP_SLT  : alu_result_o = { 31'b0, (op_1_i < op_2_i) ^ (op_1_i[31] != op_2_i[31]) };
         `ALU_OP_SLTU : alu_result_o = { 31'b0, (op_1_i < op_2_i) };

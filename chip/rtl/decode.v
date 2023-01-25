@@ -16,22 +16,22 @@ module decode(
     output [31:0] imm_o,
     output [45:0] decode_net_o
 );    
-    wire is_i_type_q = (instr_i[6:2] == 5'b00000) || (instr_i[6:2] == 5'b00100) || (instr_i[6:2] == 5'b11001) || (instr_i[6:2] == 5'b11100);
-    wire is_r_type_q = instr_i[6:2] == 5'b01100;
-    wire is_b_type_q = instr_i[6:2] == 5'b11000;
-    wire is_s_type_q = instr_i[6:2] == 5'b01000;
-    wire is_j_type_q = instr_i[6:2] == 5'b11011;
-    wire is_u_type_q = (instr_i[6:2] == 5'b01101) || (instr_i[6:2] == 5'b00101);
+    wire is_i_type_w = (instr_i[6:2] == 5'b00000) || (instr_i[6:2] == 5'b00100) || (instr_i[6:2] == 5'b11001) || (instr_i[6:2] == 5'b11100);
+    wire is_r_type_w = instr_i[6:2] == 5'b01100;
+    wire is_b_type_w = instr_i[6:2] == 5'b11000;
+    wire is_s_type_w = instr_i[6:2] == 5'b01000;
+    wire is_j_type_w = instr_i[6:2] == 5'b11011;
+    wire is_u_type_w = (instr_i[6:2] == 5'b01101) || (instr_i[6:2] == 5'b00101);
 
-    assign rs1_valid_o = !is_u_type_q && !is_j_type_q;
-    assign rs2_valid_o = is_s_type_q || is_r_type_q || is_b_type_q;
-    assign rd_valid_o  = !is_s_type_q && !is_b_type_q;
+    assign rs1_valid_o = !is_u_type_w && !is_j_type_w;
+    assign rs2_valid_o = is_s_type_w || is_r_type_w || is_b_type_w;
+    assign rd_valid_o  = !is_s_type_w && !is_b_type_w;
 
-    assign imm_o = is_i_type_q ? { {21{instr_i[31]}}, instr_i[30:20] } :
-                   is_b_type_q ? { {20{instr_i[31]}}, instr_i[7], instr_i[30:25], instr_i[11:8], 1'b0 } :
-                   is_s_type_q ? { {21{instr_i[31]}}, instr_i[30:25], instr_i[11:7] } :
-                   is_j_type_q ? { {12{instr_i[31]}}, instr_i[19:12], instr_i[20], instr_i[30:21], 1'b0  } :
-                   is_u_type_q ? { instr_i[31:12], 12'b0 } :
+    assign imm_o = is_i_type_w ? { {21{instr_i[31]}}, instr_i[30:20] } :
+                   is_b_type_w ? { {20{instr_i[31]}}, instr_i[7], instr_i[30:25], instr_i[11:8], 1'b0 } :
+                   is_s_type_w ? { {21{instr_i[31]}}, instr_i[30:25], instr_i[11:7] } :
+                   is_j_type_w ? { {12{instr_i[31]}}, instr_i[19:12], instr_i[20], instr_i[30:21], 1'b0  } :
+                   is_u_type_w ? { instr_i[31:12], 12'b0 } :
                                                     31'd0;
                                                     
     // Order has to be in-line with index definitions in riscv_defs.v
