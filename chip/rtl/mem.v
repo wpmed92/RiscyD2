@@ -1,5 +1,5 @@
 //True Dual Port with Byte-Wide Write Enable
-`include "constant_defs.v"
+`include "riscv_defs.v"
 
 module mem
 #(
@@ -31,11 +31,11 @@ module mem
 );
 
 // Core Memory
-reg [DATA_WIDTH-1:0]   ram_block_r [0:(2**ADDR_WIDTH)-1];
+reg [DATA_WIDTH-1:0]   ram_block_q [0:(2**ADDR_WIDTH)-1];
 integer                i;
 
 initial begin
-    $readmemh("code.mem", ram_block_r);
+    $readmemh("code.mem", ram_block_q);
 end
 
 // Port-A Operation (instructions)
@@ -43,11 +43,11 @@ always @ (posedge clkA_i) begin
     if(enaA_i && state_i == `FETCH_DECODE) begin
         for(i=0;i<NUM_COL;i=i+1) begin
             if(weA_i[i]) begin
-                ram_block_r[addrA_i][i*COL_WIDTH +: COL_WIDTH] <= dinA_i[i*COL_WIDTH +: COL_WIDTH];
+                ram_block_q[addrA_i][i*COL_WIDTH +: COL_WIDTH] <= dinA_i[i*COL_WIDTH +: COL_WIDTH];
             end
         end
 
-        doutA_o <= ram_block_r[addrA_i];
+        doutA_o <= ram_block_q[addrA_i];
     end
 end
 
@@ -56,11 +56,11 @@ always @ (posedge clkB_i) begin
     if(enaB_i && state_i == `LOAD_STORE) begin
         for(i=0;i<NUM_COL;i=i+1) begin
             if(weB_i[i]) begin
-                ram_block_r[addrB_i][i*COL_WIDTH +: COL_WIDTH] <= dinB_i[i*COL_WIDTH +: COL_WIDTH];
+                ram_block_q[addrB_i][i*COL_WIDTH +: COL_WIDTH] <= dinB_i[i*COL_WIDTH +: COL_WIDTH];
             end
         end
 
-        doutB_o <= ram_block_r[addrB_i];
+        doutB_o <= ram_block_q[addrB_i];
     end
 end
 

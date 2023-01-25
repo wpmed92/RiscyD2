@@ -1,5 +1,3 @@
-`include "extension_defs.v"
-`include "constant_defs.v"
 `include "riscv_defs.v"
 
 module execute(
@@ -12,17 +10,18 @@ module execute(
     input [31:0] pc_i,
     input [45:0] decode_net_i,
 
-    //Outputs
+    // Outputs
     output [31:0] writeback_value_o,
     output [31:0] address_o,
-    output   branch_taken_o
+    output   branch_taken_o,
+    output   should_stall_ex_o
 );
     reg [ 3:0] alu_opcode_r;
     reg [31:0] alu_op_1_r;
     reg [31:0] alu_op_2_r;
 
     wire is_branch_w = decode_net_i[`IS_BEQ] || decode_net_i[`IS_BNE] || decode_net_i[`IS_BGE] || decode_net_i[`IS_BGEU] || decode_net_i[`IS_BLT] ||
-                     decode_net_i[`IS_BLTU];
+                       decode_net_i[`IS_BLTU];
 
     wire is_store_w = decode_net_i[`IS_SB] || decode_net_i[`IS_SH]  || decode_net_i[`IS_SW];
     wire is_load_w  = decode_net_i[`IS_LB] || decode_net_i[`IS_LBU] || decode_net_i[`IS_LH] || decode_net_i[`IS_LHU] || decode_net_i[`IS_LW];
@@ -133,6 +132,35 @@ module execute(
         .alu_result_o(alu_result_w)
     );
 
+`ifdef M_EXTENSION
+    wire [31:0] mul_res_w;
+    wire [31:0] div_res_w;
+    wire is_mul = decode_net_i[`IS_MUL] || decode_net_i[`IS_MULH] || decode_net_i[`IS_MULHSU] || decode_net_i[`IS_MULHU];
+    wire is_div = decode_net_i[`IS_DIV] || decode_net_i[`IS_DIVU] || decode_net_i[`IS_REM]    || decode_net_i[`IS_REMU];
+
+    multiplier multiplier_inst(
+        .op1_i(rs1_val_i),
+        .op2_i(rs2_val_i),
+        .is_mul_i(decode_net_i[`IS_MUL]),
+        .is_mulh_i(decode_net_i[`IS_MULH]),
+        .is_mulhsu_i(decode_net_i[`IS_MULHSU]),
+        .is_mulhu_i(decode_net_i[`IS_MULHU]),
+        .product_o(mul_res_w)
+    );
+
+    divider divider_inst(
+        .clk_i(clk_i),
+        .state_i(state_i),
+        .op1_i(rs1_val_i),
+        .op2_i(rs2_val_i),
+        .is_div_i(decode_net_i[`IS_DIV]),
+        .is_divu_i(decode_net_i[`IS_DIVU]),
+        .is_rem_i(decode_net_i[`IS_REM]),
+        .is_remu_i(decode_net_i[`IS_REMU]),
+        .writeback_val_o(div_res_w),
+        .should_stall_ex_o(should_stall_ex_o)
+    );
+`endif
 
     reg taken_branch_r = 0;
     reg [31:0] address_r = 0;
@@ -171,6 +199,9 @@ module execute(
                        (decode_net_i[`IS_JALR] || decode_net_i[`IS_JAL] || is_branch_w) ?  address_r    :
                                                                                                 32'd0;
 
-    assign writeback_value_o = ~(is_load_w || is_store_w || is_branch_w) ? alu_result_w : 0;
+    assign writeback_value_o =  is_div                                  ? div_res_w    :
+                                is_mul                                  ? mul_res_w    :
+                              ~(is_load_w || is_store_w || is_branch_w) ? alu_result_w :
+                                                                                      0;
     assign branch_taken_o = taken_branch_r;
 endmodule

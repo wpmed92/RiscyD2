@@ -1,4 +1,4 @@
-`include "constant_defs.v"
+`include "riscv_defs.v"
 
 module gpio(
     // Inputs

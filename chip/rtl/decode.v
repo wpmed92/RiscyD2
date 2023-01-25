@@ -1,6 +1,4 @@
 `include "riscv_defs.v"
-`include "extension_defs.v"
-`include "constant_defs.v"
 
 module decode(
     // Inputs

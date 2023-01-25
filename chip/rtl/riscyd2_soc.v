@@ -1,7 +1,4 @@
 `include "riscv_defs.v"
-`include "extension_defs.v"
-`include "constant_defs.v"
-
 
 module riscyd2_soc(
     // Inputs
@@ -13,16 +10,6 @@ module riscyd2_soc(
     output [3:0] led,
     output uart_rxd_out
 );
-    reg[31:0] pc_r = 0;
-    reg [2:0] state_r = 0;
-
-    // clk will increase state
-    // 0 = fetch, decode
-    // 1 = rf, csr_rf read
-    // 2 = execute (alu, muldiv, branch)
-    // 3 = mem/gpio access
-    // 4 = writeback
-
     // Decode
     wire [31:0] instr_w;
     wire [4:0] rs1_w;
@@ -42,6 +29,7 @@ module riscyd2_soc(
 
     wire [45:0] decode_net_w;
     wire taken_branch_w;
+    wire should_stall_ex_w;
 
     decode decode_inst(
         .instr_i(instr_w),
@@ -57,7 +45,7 @@ module riscyd2_soc(
 
     rf rf_inst(
         .clk_i(CLK100MHZ),
-        .state_i(state_r),
+        .state_i(state_q),
         .rs1_en_i(rs1_en_w), 
         .rs1_i(rs1_w), 
         .rs2_en_i(rs2_en_w),
@@ -75,7 +63,7 @@ module riscyd2_soc(
 
     csr_rf csr_rf_inst(
         .clk_i(CLK100MHZ),
-        .state_i(state_r),
+        .state_i(state_q),
         .en_csr_i(decode_net_w[`IS_CSRRS]),
         .csr_adr_i(imm_w[11:0]),
         .csr_val_o(csr_val_w)
@@ -83,20 +71,21 @@ module riscyd2_soc(
 
      execute execute_inst(
         .clk_i(CLK100MHZ),
-        .state_i(state_r),
+        .state_i(state_q),
         .rs1_val_i(rs1_val_w),
         .rs2_val_i(rs2_val_w),
         .imm_i(imm_w),
-        .pc_i(pc_r),
+        .pc_i(pc_q),
         .decode_net_i(decode_net_w),
         .writeback_value_o(alu_result_w),
         .address_o(address_w),
-        .branch_taken_o(taken_branch_w)
+        .branch_taken_o(taken_branch_w),
+        .should_stall_ex_o(should_stall_ex_w)
     );
 
     mmio mmio_instance(
         .clk_i(CLK100MHZ),
-        .state_i(state_r),
+        .state_i(state_q),
         .is_lb_i(decode_net_w[`IS_LB]),
         .is_lbu_i(decode_net_w[`IS_LBU]),
         .is_lh_i(decode_net_w[`IS_LH]),
@@ -105,7 +94,7 @@ module riscyd2_soc(
         .is_sb_i(decode_net_w[`IS_SB]),
         .is_sh_i(decode_net_w[`IS_SH]),
         .is_sw_i(decode_net_w[`IS_SW]),
-        .pc_i(pc_r),
+        .pc_i(pc_q),
         .address_i(address_w),
         .data_i(rs2_val_w),
         .uart_txd_i(uart_txd_in),
@@ -116,12 +105,21 @@ module riscyd2_soc(
         .uart_rxd_o(uart_rxd_out)
     );
 
-    always @ (posedge CLK100MHZ) begin
-        state_r <= (state_r + 1) % 5;
 
-        if (state_r == `WRITE_BACK) begin
-            pc_r <= taken_branch_w ? address_w : (pc_r + 4);
+    reg [31:0] pc_q, next_pc_q      = 0;
+    reg [2:0]  state_q, next_state_q = 0;
+
+    always @ (posedge CLK100MHZ) begin
+        next_state_q <= should_stall_ex_w ? `EXECUTE_2 : (next_state_q + 1) % 5;
+
+         if (next_state_q == `WRITE_BACK && !should_stall_ex_w) begin
+            next_pc_q    <= taken_branch_w    ? address_w    : (next_pc_q + 4);
         end
+    end
+
+    always @ (posedge CLK100MHZ) begin
+        state_q <= should_stall_ex_w ? `EXECUTE_2  : next_state_q;
+        pc_q    <= next_pc_q;
     end
 
 endmodule

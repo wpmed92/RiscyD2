@@ -1,11 +1,10 @@
 `include "riscv_defs.v"
-`include "constant_defs.v"
 
 module execute_tb();
     parameter CLK_PERIOD = 10;
 
     reg         clk;
-    reg  [ 2:0] state_q = `EXECUTE;
+    reg  [ 2:0] state_q = `EXECUTE_1;
     reg  [31:0] rs1_val_q = 32'd0;
     reg  [31:0] rs2_val_q = 32'd0;
     reg  [31:0] imm_q = 32'd0;
