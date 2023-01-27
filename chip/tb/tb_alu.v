@@ -19,15 +19,18 @@ module alu_tb();
     );
 
     integer out_data;
+    reg log_en = 0;
 
     always #(CLK_PERIOD / 2) clk = ~clk;
 
     always @(posedge clk) begin
-        $fwrite(out_data, "\n%b, val, %d, %d", alu_opcode, alu_result_w, expected_result);
+        if (log_en) begin
+            $fwrite(out_data, "\n%b, val, %d, %d", alu_opcode, alu_result_w, expected_result);
+        end
     end 
 
     initial begin
-        out_data = $fopen("tb_alu.csv");
+        out_data = $fopen("tb_alu.tbout");
         clk = 1;
 
         // Sync to clk
@@ -37,6 +40,8 @@ module alu_tb();
             op_1 = 32'd10;
             op_2 = 32'd2;
             expected_result = 32'd12;
+
+        log_en = 1;
 
         #10 alu_opcode = `ALU_OP_SUB;
             op_1 = 32'd10;
@@ -155,6 +160,8 @@ module alu_tb();
              op_1 = 32'h1;
              op_2 = 32'd2;
             expected_result = 32'd1;
+
+        log_en = 0;
 
         #10 $fclose(out_data);
         $finish;

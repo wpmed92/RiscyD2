@@ -162,6 +162,10 @@ module execute(
     );
 `endif
 
+`ifndef M_EXTENSION
+    assign should_stall_ex_o = 0;
+`endif
+
     reg taken_branch_r = 0;
     reg [31:0] address_r = 0;
 
@@ -199,8 +203,11 @@ module execute(
                        (decode_net_i[`IS_JALR] || decode_net_i[`IS_JAL] || is_branch_w) ?  address_r    :
                                                                                                 32'd0;
 
-    assign writeback_value_o =  is_div                                  ? div_res_w    :
+    assign writeback_value_o = 
+`ifdef M_EXTENSION
+                                is_div                                  ? div_res_w    :
                                 is_mul                                  ? mul_res_w    :
+`endif
                               ~(is_load_w || is_store_w || is_branch_w) ? alu_result_w :
                                                                                       0;
     assign branch_taken_o = taken_branch_r;

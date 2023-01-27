@@ -9,7 +9,7 @@ module execute_tb();
     reg  [31:0] rs2_val_q = 32'd0;
     reg  [31:0] imm_q = 32'd0;
     reg  [31:0]  pc_q = 32'd0;
-    reg  [36:0] decode_net_q = 36'd0;
+    reg  [45:0] decode_net_q = 36'd0;
 
 
     wire [31:0] writeback_value_w;
@@ -33,7 +33,7 @@ module execute_tb();
     reg [31:0] expected_wb_q = 0;
 
     // Concetanate expected execute output values for each opcode
-    reg [160:0] test_data [0:36];
+    reg [160:0] test_data [0:45];
     integer i = 0;
     integer j = 0;
     integer out_data;
@@ -45,7 +45,7 @@ module execute_tb();
 
 
     initial begin 
-        out_data = $fopen("tb_execute.csv");
+        out_data = $fopen("tb_execute.tbout");
 
         #10 for (i = 0; i < 36; i = i + 1)
             test_data[i] = 0;
@@ -130,7 +130,7 @@ module execute_tb();
 
         #10;
 
-        for (j = 0; j < 36; j = j + 1) begin
+        for (j = 9; j < 46; j = j + 1) begin
             # 10 rs1_val_q        = test_data[j][160:129];
             rs2_val_q             = test_data[j][128:97];
             imm_q                 = test_data[j][96:65];

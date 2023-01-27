@@ -9,7 +9,7 @@ parser.add_argument('-i', dest='inFile', type=str, help='Path to source .csv')
 def check_tb_output(inFile):
     with open(inFile, 'r') as file:
         csvreader = csv.reader(file)
-        module_name = Path(inFile).stem.split("tb_")[1]
+        tb_name = Path(inFile).stem
 
         for row in csvreader:
             if (len(row) == 0):
@@ -21,9 +21,9 @@ def check_tb_output(inFile):
                 signal_name, actual_val, expected_val = row[i].strip(), int(row[i + 1].strip()), int(row[i + 2].strip())
 
                 if (actual_val != expected_val):
-                    raise Exception(f'Module "{module_name}" fails at test case "{test_name}", signal "{signal_name}" is {actual_val}, but should be {expected_val}')
+                    raise Exception(f'Testbench "{tb_name}" fails at test case "{test_name}", signal "{signal_name}" is {actual_val}, but should be {expected_val}')
 
-        print(f'All tests passed in module "{module_name}"')
+        print("PASSED")
 
 
 if __name__ == "__main__":
