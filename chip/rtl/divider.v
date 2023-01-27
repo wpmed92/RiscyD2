@@ -110,8 +110,4 @@ end
 assign writeback_val_o   = (op1_i[31] ^ op2_i[31]) ? -result_q : result_q;
 assign should_stall_ex_o = should_stall_q;
 
-assign dbz = dbz_q;
-assign valid = valid_q;
-assign busy = busy_q;
-
 endmodule

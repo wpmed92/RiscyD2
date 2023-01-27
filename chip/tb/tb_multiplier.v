@@ -15,6 +15,7 @@ module multiplier_tb();
 
     // Outputs
     wire [31:0] product;
+    reg  [31:0] expected_product;
 
     multiplier multiplier_inst(
         .op1_i(rs1_val),
@@ -27,23 +28,32 @@ module multiplier_tb();
     );
 
     integer out_data;
+    reg log_en = 0;
 
     always #(CLK_PERIOD / 2) clk = ~clk;
 
-    initial begin
-        $monitor("\t%d:\t%d * %d = %d",
-            $time, rs1_val, rs2_val, product);
-    end
+    always @(posedge clk) begin
+        if (log_en) begin
+            $fwrite(out_data, "\n%b, product, %d, %d", { is_mul, is_mulh, is_mulhsu, is_mulhu }, product, expected_product);
+        end
+    end 
 
     initial begin
+        out_data = $fopen("tb_multiplier.tbout");
         clk = 1;
 
-        #10 rs1_val = 32'd2;
+        // Sync to clk
+        @(posedge clk) ;
+        
+        #5 rs1_val = 32'd2;
             rs2_val = 32'd8;
             is_mul = 1;
             is_mulh = 0;
             is_mulhsu = 0;
             is_mulhu = 0;
+            expected_product = 32'd16;
+
+        log_en = 1;
 
         #10 rs1_val = 32'hFFFFFFFF;
             rs2_val = 32'hFFFFFFFF;
@@ -51,6 +61,7 @@ module multiplier_tb();
             is_mulh = 0;
             is_mulhsu = 0;
             is_mulhu = 0;
+            expected_product = 32'd1;
 
         #10 rs1_val = 32'hFFFFFFFF;
             rs2_val = 32'hFFFFFFFF;
@@ -58,6 +69,7 @@ module multiplier_tb();
             is_mulh = 1;
             is_mulhsu = 0;
             is_mulhu = 0;
+            expected_product = 32'd0;
 
         #10 rs1_val = 32'hFFFFFFFF;
             rs2_val = 32'hFFFFFFFF;
@@ -65,6 +77,7 @@ module multiplier_tb();
             is_mulh = 0;
             is_mulhsu = 1;
             is_mulhu = 0;
+            expected_product = 32'hffffffff;
 
         #10 rs1_val = 32'hFFFFFFFF;
             rs2_val = 32'hFFFFFFFF;
@@ -72,8 +85,12 @@ module multiplier_tb();
             is_mulh = 0;
             is_mulhsu = 0;
             is_mulhu = 1;
+            expected_product = 32'hfffffffe;
 
-        # 10 $finish;
+        #10 log_en = 0;
+
+        #10 $fclose(out_data);
+        $finish;
     
     end
 endmodule
