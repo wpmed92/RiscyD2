@@ -14,7 +14,6 @@ jobs:
       run: |
           cd test
           python run_chip_test.py
-    - name: UART test
+    - name: Testbenches
       run: |
-          cd chip/tb
-          python run_uart_test.py
+          make test

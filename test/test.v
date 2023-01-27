@@ -14,5 +14,12 @@ module test;
 
     always #5 clk = !clk;
 
-    cpu core (clk, leds, tx, rx, sw);
+    riscyd2_soc soc(
+        .CLK100MHZ(clk), 
+        .uart_txd_in(tx),
+        .sw(sw),
+        .led(leds), 
+        .uart_rxd_out(rx)
+    );
+    
 endmodule

@@ -1,4 +1,6 @@
-# RiscyD2
+![RiscyD2](./demo/riscyd2_banner.png)
+
+---
 
 RiscyD2 is a tiny RISC-V based microcontroller/softcore running on a Digilent Arty A7-35T board.
 

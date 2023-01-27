@@ -21,18 +21,23 @@ module test_uart;
         msg[3] <= 8'h12;
     end
 
+    integer data_out;
+
     initial begin
+        data_out = $fopen("tb_uart.tbout");
+
         # 4270560
         if (msg[0] == msg_back[0] && 
             msg[1] == msg_back[1] && 
             msg[2] == msg_back[2] && 
             msg[3] == msg_back[3]
         ) begin
-            $display("PASSED");
+            $fwrite(data_out, "0, uart_test_passed, 1, 1");
         end else begin
-            $display("FAILED");
+            $fwrite(data_out, "0, uart_test_passed, 1, 0");
         end 
 
+        $fclose(data_out);
         $finish;
     end
 
@@ -68,19 +73,19 @@ module test_uart;
         end
     end
 
-    uart_rx uart0(
-        clk,
-        tx,
-        byte,
-        byte_read
+    uart_rx uart_rx_inst(
+        .clk_i(clk),
+        .uart_txd_i(tx),
+        .byte_o(byte),
+        .byte_ready_o(byte_read)
     );
 
-    uart_tx uart1(
-        clk,
-        tx_byte,
-        tx_en,
-        tx_ready,
-        tx
+    uart_tx uart_tx_inst(
+        .clk_i(clk),
+        .byte_i(tx_byte),
+        .enable_i(tx_en),
+        .ready_o(tx_ready),
+        .uart_rxd_o(tx)
     );
 
 endmodule

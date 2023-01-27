@@ -4,3 +4,5 @@ __pycache__
 *.mem
 *.chip
 *.vcd
+*.tbout
+*.bin

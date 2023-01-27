@@ -1,50 +1,52 @@
-`include "constant_defs.v"
-`include "extension_defs.v"
+`include "riscv_defs.v"
 
 module rf(
-    input clk,
-    input [2:0] state,
-    input rs1_en, 
-    input [4:0] rs1,
-    output [31:0] rs1_val, 
-    input rs2_en, 
-    input [4:0] rs2,
-    output [31:0] rs2_val, 
-    input rd_en,
-    input [4:0] rd,
-    input is_load,
-    input is_csr,
-    input [31:0] alu_result,
-    input [31:0] load_result,
-    input [31:0] csr_val
-);
-    reg [31:0] registers[0:31];
+    // Inputs
+    input clk_i,
+    input [2:0] state_i,
+    input rs1_en_i, 
+    input [4:0] rs1_i,
+    input rs2_en_i, 
+    input [4:0] rs2_i,
+    input rd_en_i,
+    input [4:0] rd_i,
+    input [4:0] is_load_i,
+    input is_csr_i,
+    input [31:0] alu_result_i,
+    input [31:0] load_result_i,
+    input [31:0] csr_val_i,
 
-    reg [31:0] _rs1_val;
-    reg [31:0] _rs2_val;
+    // Outputs
+    output [31:0] rs1_val_o,
+    output [31:0] rs2_val_o
+);
+    reg [31:0] registers_q[0:31];
+
+    reg [31:0] rs1_val_q;
+    reg [31:0] rs2_val_q;
 
     integer i;
 
     initial begin
         for (i = 0; i < 32; i = i + 1)
-            registers[i] = 0;
+            registers_q[i] = 0;
     end
 
-    always @(posedge clk) begin
-        if (state == `REG_FILE_READ) begin
-            _rs1_val <= rs1_en ? registers[rs1] : 0;
-            _rs2_val <= rs2_en ? registers[rs2] : 0;
-        end else if (state == `WRITE_BACK && rd_en && rd != 0) begin
-            registers[rd] = is_load ? load_result : 
-                            is_csr  ? csr_val :
-                            alu_result;
+    always @(posedge clk_i) begin
+        if (state_i == `EXECUTE_1) begin
+            rs1_val_q <= rs1_en_i ? registers_q[rs1_i] : 0;
+            rs2_val_q <= rs2_en_i ? registers_q[rs2_i] : 0;
+        end else if (state_i == `WRITE_BACK && rd_en_i && rd_i != 0) begin
+            registers_q[rd_i] = is_load_i ? load_result_i : 
+                                is_csr_i  ? csr_val_i :
+                                alu_result_i;
        `ifdef ISA_TEST
             for (i = 0; i < 32; i = i + 1)
-               $display("%d:%h", i, registers[i]);
+               $display("%d:%h", i, registers_q[i]);
         `endif
         end
     end
 
-    assign rs1_val = _rs1_val;
-    assign rs2_val = _rs2_val;
+    assign rs1_val_o = rs1_val_q;
+    assign rs2_val_o = rs2_val_q;
 endmodule

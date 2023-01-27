@@ -1,3 +1,79 @@
+//--------------------------------------------------------------------
+// Architecture
+//--------------------------------------------------------------------
+`define M_EXTENSION
+
+`define ISA_TEST
+
+//--------------------------------------------------------------------
+// Stages
+//--------------------------------------------------------------------
+`define FETCH_DECODE    3'd0
+`define EXECUTE_1       3'd1
+`define EXECUTE_2       3'd2
+`define LOAD_STORE      3'd3
+`define WRITE_BACK      3'd4
+
+// ALU ops
+`define ALU_OP_ADD  4'b0001
+`define ALU_OP_SUB  4'b0010
+`define ALU_OP_OR   4'b0011
+`define ALU_OP_XOR  4'b0100
+`define ALU_OP_AND  4'b0101
+`define ALU_OP_SLL  4'b0110
+`define ALU_OP_SRL  4'b0111
+`define ALU_OP_SRA  4'b1000
+`define ALU_OP_SLT  4'b1001
+`define ALU_OP_SLTU 4'b1010
+
+// Indexing into decode net
+`define IS_ANDI   45
+`define IS_ADDI   44
+`define IS_SLTI   43
+`define IS_SLTIU  42
+`define IS_ORI    41
+`define IS_XORI   40
+`define IS_SLLI   39
+`define IS_SRLI   38
+`define IS_SRAI   37
+`define IS_LUI    36
+`define IS_AUIPC  35
+`define IS_AND    34
+`define IS_ADD    33
+`define IS_SLT    32
+`define IS_SLTU   31
+`define IS_OR     30
+`define IS_XOR    29
+`define IS_SLL    28
+`define IS_SRL    27
+`define IS_SRA    26
+`define IS_SUB    25
+`define IS_BEQ    24
+`define IS_BNE    23
+`define IS_BGE    22
+`define IS_BGEU   21
+`define IS_BLT    20
+`define IS_BLTU   19
+`define IS_JAL    18
+`define IS_JALR   17
+`define IS_LB     16
+`define IS_LBU    15
+`define IS_LH     14
+`define IS_LHU    13
+`define IS_LW     12
+`define IS_SB     11
+`define IS_SH     10
+`define IS_SW     9
+`define IS_MUL    8
+`define IS_MULH   7
+`define IS_MULHSU 6
+`define IS_MULHU  5
+`define IS_DIV    4
+`define IS_DIVU   3
+`define IS_REM    2
+`define IS_REMU   1
+`define IS_CSRRS  0
+
 //-----------------------------------------------------------------
 //                         RISC-V Core
 //                            V1.0.1
@@ -37,6 +113,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF 
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
 // SUCH DAMAGE.
+
 //--------------------------------------------------------------------
 // Instructions Masks
 //--------------------------------------------------------------------
